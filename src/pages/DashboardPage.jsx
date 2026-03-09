@@ -1,4 +1,3 @@
-import TopBar from "../components/layout/TopBar";
 import {
     PlusCircle,
     UserPlus,

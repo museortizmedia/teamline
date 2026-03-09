@@ -8,7 +8,7 @@ import {
     User
 } from "lucide-react";
 
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../auth/AuthContext";
 
 export default function TopBar({ setPage }) {
 
@@ -37,7 +37,10 @@ export default function TopBar({ setPage }) {
 
             {/* Logo */}
 
-            <div className="flex items-center">
+            <div className="flex items-center" onClick={() => {
+                setPage("teams");
+                setOpen(false);
+            }}>
                 <div className="bg-[#256af4]/20 flex items-center justify-center rounded-full w-10 h-10 border border-[#256af4]/30">
                     <Trophy className="text-[var(--color-primary)] w-5 h-5" />
                 </div>
@@ -45,7 +48,10 @@ export default function TopBar({ setPage }) {
 
             {/* Title */}
 
-            <h1 className="text-lg font-bold text-center flex-1 font-display">
+            <h1 className="text-lg font-bold text-center flex-1 font-display" onClick={() => {
+                setPage("teams");
+                setOpen(false);
+            }}>
                 Team Hub
             </h1>
 

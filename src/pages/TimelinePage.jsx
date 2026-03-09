@@ -7,7 +7,6 @@ import {
     MessageCircle,
     Plus
 } from "lucide-react";
-import TopBar from "../components/layout/TopBar";
 
 const moments = [
     {

@@ -16,7 +16,6 @@ import {
     User,
     SquarePen
 } from "lucide-react";
-import TopBar from "../components/layout/TopBar";
 
 export default function ForumPage() {
     return (

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useAuth } from "./auth/AuthContext";
 
-import BottomNav from "./components/layout/BottomNav";
+
+import TopBar from "./components/TopBar";
+import BottomNav from "./components/BottomNav";
 
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -10,7 +12,6 @@ import ForumPage from "./pages/ForumPage";
 import CreateMemory from "./pages/CreateMemory";
 import ProfilePage from "./pages/ProfilePage";
 import TeamAdminPage from "./pages/TeamAdminPage";
-import TopBar from "./components/layout/TopBar";
 
 export default function App() {
 

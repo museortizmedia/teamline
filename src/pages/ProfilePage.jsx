@@ -5,7 +5,6 @@ import {
     Calendar,
     User
 } from "lucide-react";
-import TopBar from "../components/layout/TopBar";
 
 export default function ProfilePage() {
 
