@@ -31,12 +31,6 @@ export default function BottomNav({ current, setPage }) {
                 />
 
                 <Item
-                    icon={<PlusSquare size={22} />}
-                    label="Post"
-                    page="newpost"
-                />
-
-                <Item
                     icon={<MessageCircle size={22} />}
                     label="Forum"
                     page="forum"

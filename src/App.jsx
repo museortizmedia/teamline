@@ -33,9 +33,6 @@ export default function App() {
       case "forum":
         return <ForumPage />;
 
-      case "newpost":
-        return <CreateMemory goBack={() => setPage("timeline")} />;
-
       case "profile":
         return <ProfilePage />;
 

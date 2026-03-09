@@ -7,6 +7,8 @@ import {
     MessageCircle,
     Plus
 } from "lucide-react";
+import CreateMemoryPage from "./CreateMemory";
+import { useState } from "react";
 
 const moments = [
     {
@@ -54,6 +56,9 @@ const moments = [
 ];
 
 export default function TimelinePage() {
+
+    const [openEditor, setOpenEditor] = useState(false);
+
     return (
         <div className="min-h-screen bg-background-dark text-slate-100 font-display max-w-7xl mx-auto">
 
@@ -225,9 +230,15 @@ export default function TimelinePage() {
             </main>
 
             {/* Floating action */}
-            <button className="fixed bottom-20 right-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-2xl z-50">
+            <button className="fixed bottom-20 right-8 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-2xl z-50" onClick={() => setOpenEditor(true)}>
                 <Plus size={26} />
             </button>
+
+            {/* modal */}
+            <CreateMemoryPage
+                isOpen={openEditor}
+                onClose={() => setOpenEditor(false)}
+            />
 
         </div>
     );
