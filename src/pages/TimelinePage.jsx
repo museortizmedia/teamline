@@ -7,7 +7,7 @@ import {
     MessageCircle,
     Plus
 } from "lucide-react";
-import CreateMemoryPage from "./CreateMemory";
+import CreateMemoryPage from '../pages/CreateMemoryPage'
 import { useState } from "react";
 
 const moments = [

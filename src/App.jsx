@@ -5,19 +5,27 @@ import { useAuth } from "./auth/AuthContext";
 import TopBar from "./components/TopBar";
 import BottomNav from "./components/BottomNav";
 
-import AuthPage from "./pages/AuthPage";
+import AuthPage from "./pages/Auth/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import TimelinePage from "./pages/TimelinePage";
 import ForumPage from "./pages/ForumPage";
-import CreateMemory from "./pages/CreateMemory";
 import ProfilePage from "./pages/ProfilePage";
 import TeamAdminPage from "./pages/TeamAdminPage";
+import Test from "./services/supabase/test";
 
 export default function App() {
 
-  const { isAuthenticated } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
 
   const [page, setPage] = useState("dashboard");
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <AuthPage />;

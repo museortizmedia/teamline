@@ -1,4 +1,4 @@
-import { Home, History, MessageCircle, PlusSquare, User } from "lucide-react";
+import { Home, History, MessageCircle, User, PlusCircle, Bell, Users, PlusSquare } from "lucide-react";
 
 export default function BottomNav({ current, setPage }) {
 
@@ -25,20 +25,26 @@ export default function BottomNav({ current, setPage }) {
                 />
 
                 <Item
-                    icon={<History size={22} />}
-                    label="Timeline"
+                    icon={<Users size={22} />}
+                    label="Teams"
                     page="timeline"
                 />
 
                 <Item
-                    icon={<MessageCircle size={22} />}
-                    label="Forum"
+                    icon={<PlusSquare size={22} />}
+                    label="Crear"
+                    page="forum"
+                />
+
+                <Item
+                    icon={<Bell size={22} />}
+                    label="Actividad"
                     page="forum"
                 />
 
                 <Item
                     icon={<User size={22} />}
-                    label="Profile"
+                    label="Perfil"
                     page="profile"
                 />
 

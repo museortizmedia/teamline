@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import {
-    Bell,
     LogOut,
     Trophy,
     Settings,
@@ -16,6 +15,16 @@ export default function TopBar({ setPage }) {
 
     const [open, setOpen] = useState(false);
     const menuRef = useRef();
+
+    const activeRole = user?.role || "admin"; // admin | capitan | manager | coach
+
+    // Configuration for role-based styling
+    const roleConfig = {
+        capitan: { bg: "bg-yellow-500", text: "text-gray-800" },
+        admin: { bg: "bg-blue-700/40", text: "text-blue-600" },
+        manager: { bg: "bg-green-500/40", text: "text-green-600" },
+        default: { bg: "bg-white/40", text: "text-white" },
+    };
 
     useEffect(() => {
 
@@ -36,33 +45,28 @@ export default function TopBar({ setPage }) {
         <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 backdrop-blur-md bg-[#101622]/80 border-b border-slate-800 text-white">
 
             {/* Logo */}
-
-            <div className="flex items-center" onClick={() => {
-                setPage("teams");
-                setOpen(false);
-            }}>
-                <div className="bg-[#256af4]/20 flex items-center justify-center rounded-full w-10 h-10 border border-[#256af4]/30">
-                    <Trophy className="text-[var(--color-primary)] w-5 h-5" />
+            <div
+                className="flex items-center cursor-pointer"
+                onClick={() => setPage("rolePanel")}
+                title={`Rol: ${activeRole}`}
+            >
+                <div
+                    className={`flex items-center justify-center rounded-[10px] w-10 h-10 ${roleConfig[activeRole]?.bg || roleConfig.default.bg}`}
+                >
+                    <Trophy
+                        className={`w-5 h-5 ${roleConfig[activeRole]?.text || roleConfig.default.text}`}
+                    />
                 </div>
             </div>
 
             {/* Title */}
-
-            <h1 className="text-lg font-bold text-center flex-1 font-display" onClick={() => {
-                setPage("teams");
-                setOpen(false);
-            }}>
-                Team Hub
-            </h1>
+            <div className="flex-1 flex items-center justify-center cursor-pointer" onClick={() => { setPage("teams"); setOpen(false); }}>
+                <img src="/TeamLineLogoBlack.png" alt="TeamLine Logo" className="h-8 w-auto mr-2" />
+                <span className="text-lg font-bold font-display">TeamLine</span>
+            </div>
 
             {/* Actions */}
-
             <div className="flex items-center gap-3 relative" ref={menuRef}>
-
-                <button className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-800">
-                    <Bell className="w-5 h-5" />
-                </button>
-
                 <button
                     onClick={() => setOpen(!open)}
                 >
