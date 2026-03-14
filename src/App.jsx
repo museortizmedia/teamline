@@ -11,7 +11,6 @@ import TimelinePage from "./pages/TimelinePage";
 import ForumPage from "./pages/ForumPage";
 import ProfilePage from "./pages/ProfilePage";
 import TeamAdminPage from "./pages/TeamAdminPage";
-import Test from "./services/supabase/test";
 
 export default function App() {
 
