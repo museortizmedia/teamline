@@ -9,9 +9,11 @@ import {
 
 import { useAuth } from "../auth/AuthContext";
 
+import defaultAvatar from "../assets/default-avatar.webp";
+
 export default function TopBar({ setPage }) {
 
-    const { logout, user } = useAuth();
+    const { logout, profile, user } = useAuth();
 
     const [open, setOpen] = useState(false);
     const menuRef = useRef();
@@ -67,11 +69,12 @@ export default function TopBar({ setPage }) {
 
             {/* Actions */}
             <div className="flex items-center gap-3 relative" ref={menuRef}>
+                {profile?.display_name || ""}
                 <button
                     onClick={() => setOpen(!open)}
                 >
                     <img
-                        src={user?.avatar || "https://i.pravatar.cc/100"}
+                        src={profile?.profile_pic || defaultAvatar}
                         alt="User"
                         className="w-10 h-10 rounded-full object-cover border-2 border-[var(--color-primary)]"
                     />

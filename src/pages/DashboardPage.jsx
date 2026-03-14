@@ -2,10 +2,6 @@ import {
     PlusCircle,
     UserPlus,
     ArrowRight,
-    Home,
-    History,
-    Users,
-    Settings
 } from "lucide-react";
 
 const teams = [
@@ -57,30 +53,29 @@ export default function Dashboard() {
                             backgroundPosition: "center",
                         }}
                     >
-                        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/70 to-black"></div>
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black"></div>
 
                         <div className="relative z-10 flex flex-col gap-3">
-                            <span className="text-primary font-bold tracking-widest text-xs uppercase">
-                                Premium Sports Tracking
+                            <span className="text-white font-bold tracking-widest text-xs uppercase ">
+                                Conéctate con tu equipo
                             </span>
 
-                            <h1 className="text-white text-4xl font-black font-display">
-                                Living History
+                            <h1 className="text-primary text-4xl font-black font-display">
+                                Vive la experiencia Teamline
                             </h1>
 
-                            <p className="text-slate-300 text-sm max-w-[280px] mx-auto">
-                                The elite platform for historical team tracking and
-                                high-performance collaboration.
+                            <p className="text-slate-300 text-sm max-w-4000px] mx-auto">
+                                Descubre equipos, comparte momentos y colabora para crear un timeline que todos recordarán.
                             </p>
                         </div>
 
                         <div className="relative z-10 flex gap-3 w-full max-w-[300px]">
                             <button className="flex-1 rounded-lg h-12 bg-primary text-white font-bold">
-                                Explore
+                                Crear Team
                             </button>
 
                             <button className="flex-1 rounded-lg h-12 bg-white/10 border border-white/20 text-white font-bold">
-                                Features
+                                Unirse a un Team
                             </button>
                         </div>
                     </div>
@@ -91,27 +86,27 @@ export default function Dashboard() {
 
                     <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-800 p-4 border border-slate-700">
                         <PlusCircle className="text-primary" size={20} />
-                        <span className="font-bold text-sm">Create Team</span>
+                        <span className="font-bold text-sm">Crear Team</span>
                     </button>
 
                     <button className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-800 p-4 border border-slate-700">
                         <UserPlus className="text-primary" size={20} />
-                        <span className="font-bold text-sm">Join Team</span>
+                        <span className="font-bold text-sm">Unirse a un Team</span>
                     </button>
 
                 </div>
 
                 {/* Active teams */}
                 <div className="flex items-center justify-between px-4 pb-3 pt-6">
-                    <h2 className="text-xl font-bold font-display">Active Teams</h2>
+                    <h2 className="text-xl font-bold font-display">Tus Teams</h2>
                     <button className="text-primary text-sm font-semibold">
-                        See all
+                        Ver todos
                     </button>
                 </div>
 
                 <div className="flex flex-col gap-4 px-4">
 
-                    {teams.map((team) => (
+                    {teams.slice(0, 3).map((team) => (
                         <div
                             key={team.id}
                             className="flex flex-col gap-4 rounded-xl bg-slate-800/50 border border-slate-700 p-4"

@@ -4,12 +4,11 @@ import { createContext, useContext, useEffect, useState } from "react";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-
     const [user, setUser] = useState(null);
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Recuperar sesión y perfil al montar el provider
+    // Recuperar sesión y perfil al montar
     useEffect(() => {
         const loadSession = async () => {
             try {
@@ -17,16 +16,17 @@ export function AuthProvider({ children }) {
                 if (user) {
                     setUser(user);
 
-                    // Traer profile
-                    /*const { data, error } = await supabaseService.db.client
-                        .from("profiles")
-                        .select("*")
-                        .eq("id", user.id)
-                        .single();
-
-                    if (!error) {
-                        setProfile(data);
-                    }*/
+                    // Traer perfil directamente por user_id
+                    try {
+                        const profileData = await supabaseService.db.getById(
+                            "profiles",
+                            user.id,
+                            "user_id"
+                        );
+                        setProfile(profileData || null);
+                    } catch {
+                        setProfile(null);
+                    }
                 }
             } catch (error) {
                 console.error("Session recovery error:", error);
@@ -38,95 +38,75 @@ export function AuthProvider({ children }) {
         loadSession();
     }, []);
 
+    // LOGIN
     const login = async (email, password) => {
         try {
-
-            // login en supabase auth
             const user = await supabaseService.auth.login(email, password);
-
             setUser(user);
 
-            /*
-            Después de autenticar, consultamos la tabla profiles
-            para traer todos los datos extendidos del usuario
-            */
-
-            /*const { data, error } = await supabaseService.db.client
-                 .from("profiles")
-                 .select("*")
-                 .eq("id", user.id)
-                 .single();
- 
-             if (error) throw error;
- 
-             setProfile(data);*/
+            // Traer perfil por user_id
+            const profileData = await supabaseService.db.getById(
+                "profiles",
+                user.id,
+                "user_id",
+            );
+            setProfile(profileData || null);
 
             return user;
-
         } catch (error) {
             console.error("Login error:", error.message);
             throw error;
         }
     };
 
+    // REGISTER
     const register = async ({ email, password, username }) => {
-
         try {
+            // Validar username único
+            try {
+                const existing = await supabaseService.db.getById(
+                    "profiles",
+                    username,
+                    "username",
+                );
+                if (existing) throw new Error("El username ya está en uso");
+            } catch {
+                // No existe → ok
+            }
 
-            // registrar usuario en auth
+            // Crear usuario en Auth primero
             const user = await supabaseService.auth.register(email, password);
+            if (!user) throw new Error("No se pudo crear el usuario en Auth");
 
-            if (!user) return;
-
-            /*
-            Crear el profile del usuario
-            normalmente el id del profile es el mismo que el auth.user.id
-            */
-
-            /*const { data, error } = await supabaseService.db.client
-                .from("profiles")
-                .insert([
-                    {
-                        id: user.id,
-                        email: email,
-                        username: username,
-                        avatar_url: null
-                    }
-                ])
-                .select()
-                .single();
-
-            if (error) throw error;*/
+            // Crear perfil solo con UID válido
+            const profileData = await supabaseService.db.create("profiles", {
+                user_id: user.id,
+                username,
+                display_name: username,
+                profile_pic: null,
+                birthday: null,
+                deleted_at: null
+            });
 
             setUser(user);
-            setProfile(data);
+            setProfile(profileData);
 
             return user;
-
         } catch (error) {
-
             console.error("Register error:", error.message);
             throw error;
-
         }
-
     };
 
+    // LOGOUT
     const logout = async () => {
-
         try {
-
             await supabaseService.auth.logout();
-
             setUser(null);
             setProfile(null);
-
         } catch (error) {
-
             console.error("Logout error:", error.message);
-
         }
-
     };
 
     return (
@@ -134,10 +114,12 @@ export function AuthProvider({ children }) {
             value={{
                 user,
                 profile,
+                setProfile,
                 login,
                 register,
                 logout,
-                isAuthenticated: !!user
+                isAuthenticated: !!user,
+                loading
             }}
         >
             {children}

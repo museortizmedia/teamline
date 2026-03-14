@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     UserPlus,
     LogIn,
@@ -25,11 +25,21 @@ export default function AuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState("error");
+
+    useEffect(() => {
+        if (!message) return;
+        const timer = setTimeout(() => setMessage(""), 4000);
+        return () => clearTimeout(timer);
+    }, [message]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (mode === "register" && password !== confirmPassword) {
-            alert("Las contraseñas no coinciden");
+            setMessage("Las contraseñas no coinciden");
+            setMessageType("error");
             return;
         }
 
@@ -42,7 +52,8 @@ export default function AuthPage() {
             }
 
         } catch (error) {
-            alert(error.message);
+            setMessage(error.message);
+            setMessageType("error");
         }
     };
 
@@ -68,6 +79,23 @@ export default function AuthPage() {
                         </p>
 
                     </div>
+
+                    <AnimatePresence>
+                        {message && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                transition={{ duration: 0.3 }}
+                                className={`p-3 mb-4 rounded-md text-sm font-medium ${messageType === "error"
+                                    ? "bg-red-600 text-white"
+                                    : "bg-green-600 text-white"
+                                    }`}
+                            >
+                                {message}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     {/* TOGGLE */}
 

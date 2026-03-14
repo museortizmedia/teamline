@@ -1,0 +1,185 @@
+-- ==========================================
+-- 0️⃣ Limpiar base de datos (borrar tablas)
+-- ==========================================
+DROP TABLE IF EXISTS forum_posts CASCADE;
+DROP TABLE IF EXISTS post_comments CASCADE;
+DROP TABLE IF EXISTS post_likes CASCADE;
+DROP TABLE IF EXISTS post_media CASCADE;
+DROP TABLE IF EXISTS posts CASCADE;
+DROP TABLE IF EXISTS team_memberships CASCADE;
+DROP TABLE IF EXISTS teams CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+
+DROP TYPE IF EXISTS team_role;
+
+-- ==========================================
+-- 1️⃣ Profiles
+-- ==========================================
+CREATE TABLE profiles (
+    user_id UUID PRIMARY KEY REFERENCES auth.users(id),
+    username VARCHAR(50) NOT NULL UNIQUE,
+    display_name VARCHAR(100),
+    profile_pic TEXT,
+    birthday DATE CHECK (birthday <= CURRENT_DATE),
+    deleted_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ==========================================
+-- 2️⃣ Teams
+-- ==========================================
+CREATE TABLE teams (
+    team_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    creator_id UUID NOT NULL REFERENCES profiles(user_id),
+    name VARCHAR(100) NOT NULL,
+    foundation_date DATE NOT NULL CHECK (foundation_date <= CURRENT_DATE),
+    team_pic TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX unique_team_name ON teams(name);
+
+-- ==========================================
+-- 3️⃣ Team memberships
+-- ==========================================
+CREATE TYPE team_role AS ENUM ('creator','manager','coach','captain','member');
+
+CREATE TABLE team_memberships (
+    membership_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES teams(team_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
+    role team_role NOT NULL DEFAULT 'member',
+    active_from DATE NOT NULL,
+    active_to DATE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(team_id, user_id),
+    CHECK (active_to IS NULL OR active_from <= active_to)
+);
+
+-- Trigger: Solo un creator por team
+CREATE OR REPLACE FUNCTION enforce_single_creator()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.role = 'creator' THEN
+        IF EXISTS (
+            SELECT 1 FROM team_memberships
+            WHERE team_id = NEW.team_id AND role = 'creator'
+        ) THEN
+            RAISE EXCEPTION 'Solo puede haber un creator por equipo';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_single_creator
+BEFORE INSERT ON team_memberships
+FOR EACH ROW EXECUTE FUNCTION enforce_single_creator();
+
+-- ==========================================
+-- 4️⃣ Posts y Post Media
+-- ==========================================
+CREATE TABLE posts (
+    post_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES teams(team_id) ON DELETE CASCADE,
+    creator_id UUID NOT NULL REFERENCES profiles(user_id),
+    title VARCHAR(200) NOT NULL,
+    content TEXT,
+    post_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE post_media (
+    media_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(post_id) ON DELETE CASCADE,
+    media_url TEXT NOT NULL,
+    media_type VARCHAR(10) NOT NULL CHECK (media_type IN ('image','video'))
+);
+
+-- Trigger: validar fecha del post según rango de miembro
+CREATE OR REPLACE FUNCTION validate_post_date()
+RETURNS TRIGGER AS $$
+DECLARE
+    membership RECORD;
+BEGIN
+    SELECT * INTO membership
+    FROM team_memberships
+    WHERE team_id = NEW.team_id AND user_id = NEW.creator_id
+    ORDER BY active_from DESC LIMIT 1;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'El usuario no pertenece al equipo';
+    END IF;
+
+    IF NEW.post_date < membership.active_from OR 
+       (membership.active_to IS NOT NULL AND NEW.post_date > membership.active_to) THEN
+        RAISE EXCEPTION 'La fecha de la publicación está fuera del rango activo del miembro';
+    END IF;
+
+    IF NEW.post_date < (SELECT foundation_date FROM teams WHERE team_id = NEW.team_id) THEN
+        RAISE EXCEPTION 'La fecha de la publicación no puede ser anterior a la fundación del equipo';
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validate_post_date
+BEFORE INSERT ON posts
+FOR EACH ROW EXECUTE FUNCTION validate_post_date();
+
+-- ==========================================
+-- 5️⃣ Likes y comentarios
+-- ==========================================
+CREATE TABLE post_likes (
+    post_id UUID NOT NULL REFERENCES posts(post_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES profiles(user_id),
+    created_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY(post_id, user_id)
+);
+
+CREATE TABLE post_comments (
+    comment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    post_id UUID NOT NULL REFERENCES posts(post_id) ON DELETE CASCADE,
+    creator_id UUID NOT NULL REFERENCES profiles(user_id),
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ==========================================
+-- 6️⃣ Forum posts
+-- ==========================================
+CREATE TABLE forum_posts (
+    forum_post_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES teams(team_id),
+    creator_id UUID NOT NULL REFERENCES profiles(user_id),
+    title VARCHAR(200),
+    content TEXT,
+    post_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- ==========================================
+-- ==========================================
+-- ==========================================
+-- STORAGE
+-- ==========================================
+-- ==========================================
+-- ==========================================
+
+-- Crear bucket para avatares
+-- avatars
+
+-- Crear bucket para team pics
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('team-pics', 'team-pics', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Crear bucket para post media
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('post-media', 'post-media', true)
+ON CONFLICT (id) DO NOTHING;

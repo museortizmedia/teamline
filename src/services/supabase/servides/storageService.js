@@ -11,22 +11,19 @@ await storageService.upload(
 export const storageService = {
 
     getPublicUrl(bucket, path) {
-        const { data } = supabase
-            .storage
-            .from(bucket)
-            .getPublicUrl(path);
-
+        const { data, error } = supabase.storage.from(bucket).getPublicUrl(path);
+        if (error) throw error;
         return data.publicUrl;
     },
 
-    async upload(bucket, path, file, cache = 3600) {
+    async upload(bucket, path, file, cache = 3600, upsert = false) {
 
         const { error } = await supabase
             .storage
             .from(bucket)
             .upload(path, file, {
                 cacheControl: `${cache}`,
-                upsert: false
+                upsert: upsert
             });
 
         if (error) throw error;

@@ -18,11 +18,11 @@ export const dbService = {
         return data;
     },
 
-    async getById(table, id) {
+    async getById(table, id, keyName = "id") {
         const { data, error } = await supabase
             .from(table)
             .select("*")
-            .eq("id", id)
+            .eq(keyName, id)
             .single();
 
         if (error) throw error;
@@ -40,11 +40,11 @@ export const dbService = {
         return data;
     },
 
-    async update(table, id, payload) {
+    async update(table, id, payload, keyName = "id") {
         const { data, error } = await supabase
             .from(table)
             .update(payload)
-            .eq("id", id)
+            .eq(keyName, id)
             .select()
             .single();
 
@@ -52,11 +52,11 @@ export const dbService = {
         return data;
     },
 
-    async remove(table, id) {
+    async remove(table, id, keyName = "id") {
         const { error } = await supabase
             .from(table)
             .delete()
-            .eq("id", id);
+            .eq(keyName, id);
 
         if (error) throw error;
         return true;
