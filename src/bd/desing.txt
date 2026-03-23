@@ -163,6 +163,22 @@ CREATE TABLE forum_posts (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE OR REPLACE VIEW posts_with_role AS
+SELECT 
+    p.post_id,
+    p.team_id,
+    p.creator_id,
+    p.title,
+    p.content,
+    p.post_date,
+    p.created_at,
+    p.updated_at,
+    tm.role
+FROM posts p
+LEFT JOIN team_memberships tm
+    ON tm.team_id = p.team_id
+    AND tm.user_id = p.creator_id;
+
 -- ==========================================
 -- ==========================================
 -- ==========================================

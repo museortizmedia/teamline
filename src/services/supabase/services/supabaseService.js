@@ -1,8 +1,10 @@
+import { supabase } from "../lib/supabaseClient";
 import { authService } from "./authService";
 import { dbService } from "./dbService";
 import { storageService } from "./storageService";
 
 export const supabaseService = {
+    supabase,
     auth: authService,
     db: dbService,
     storage: storageService

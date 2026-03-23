@@ -3,15 +3,18 @@ import { createRoot } from 'react-dom/client'
 
 import './index.css' // Cargamos Tailwind
 import App from "./App";
-import { AuthProvider } from "./auth/AuthContext";
+import { AuthProvider } from './pages/Auth/AuthContext';
 import { NotificationProvider } from './pages/Notification/NotificationContext';
+import { TeamProvider } from './pages/Timeline/TeamContext';
 
 createRoot(document.getElementById('root')).render(
   <AuthProvider>
-    <NotificationProvider>
-      <StrictMode>
-        <App />
-      </StrictMode>
-    </NotificationProvider>
+    <TeamProvider>
+      <NotificationProvider>
+        <StrictMode>
+          <App />
+        </StrictMode>
+      </NotificationProvider>
+    </TeamProvider>
   </AuthProvider>
 );

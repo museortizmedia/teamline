@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Camera, Trash2, Calendar, User } from "lucide-react";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "./Auth/AuthContext";
 import { useNotification } from "./Notification/NotificationContext";
-import { supabaseService } from "../services/supabase/servides/supabaseService";
+import { supabaseService } from "../services/supabase/services/supabaseService";
 import { imageService } from "../services/imageService";
 import defaultAvatar from "../assets/default-avatar.webp";
 
@@ -84,15 +84,29 @@ export default function ProfilePage() {
             }
 
             // Actualizar perfil en DB
+            const payload = {
+                updated_at: new Date(),
+            };
+
+            // Nombre
+            if (name !== undefined) {
+                payload.display_name = name.trim() === "" ? null : name;
+            }
+
+            // Fecha
+            if (birthdate !== undefined) {
+                payload.birthday = birthdate.trim() === "" ? null : birthdate;
+            }
+
+            // Avatar
+            if (avatarUrl !== undefined) {
+                payload.profile_pic = avatarUrl;
+            }
+
             const updatedProfile = await supabaseService.db.update(
                 "profiles",
                 profile.user_id,
-                {
-                    display_name: name,
-                    birthday: birthdate,
-                    profile_pic: avatarUrl,
-                    updated_at: new Date(),
-                },
+                payload,
                 "user_id"
             );
 
@@ -107,9 +121,12 @@ export default function ProfilePage() {
     };
 
     // Soft delete de la cuenta
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [confirmUsername, setConfirmUsername] = useState("");
+    const [confirmEmail, setConfirmEmail] = useState("");
+
     const handleDeleteAccount = async () => {
         if (!user || !profile) return;
-        if (!confirm("¿Estás seguro de que quieres eliminar tu cuenta?")) return;
 
         try {
             await supabaseService.db.update(
@@ -127,7 +144,8 @@ export default function ProfilePage() {
         }
     };
 
-    return (
+    return (<>
+
         <div className="min-h-screen bg-background-dark text-slate-100 flex flex-col max-w-7xl mx-auto">
             <main className="pb-24 flex flex-col gap-6">
                 {/* Header */}
@@ -214,7 +232,7 @@ export default function ProfilePage() {
                         <li>Tu perfil y estadísticas</li>
                     </ul>
                     <button
-                        onClick={handleDeleteAccount}
+                        onClick={() => setShowDeleteModal(true)}
                         className="flex items-center gap-2 px-4 py-2 border border-red-400 text-red-400 rounded-lg hover:bg-red-500/10"
                     >
                         <Trash2 size={16} />
@@ -223,5 +241,73 @@ export default function ProfilePage() {
                 </div>
             </main>
         </div>
-    );
+
+        {showDeleteModal && (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={() => { setShowDeleteModal(false); setConfirmUsername(""); setConfirmEmail(""); }}>
+                <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md space-y-4" onClick={(e) => e.stopPropagation()}>
+
+                    <h2 className="text-xl font-bold text-red-400">
+                        Confirmar eliminación
+                    </h2>
+
+                    <p className="text-sm text-slate-400">
+                        Esta acción es irreversible. Para confirmar, escribe tu username y tu correo.
+                    </p>
+
+                    {/* Username */}
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={confirmUsername}
+                        onChange={(e) => setConfirmUsername(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm"
+                    />
+
+                    {/* Email */}
+                    <input
+                        type="email"
+                        placeholder="Correo"
+                        value={confirmEmail}
+                        onChange={(e) => setConfirmEmail(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm"
+                    />
+
+                    {/* Botones */}
+                    <div className="flex justify-between gap-3 pt-2">
+                        <button
+                            onClick={() => {
+                                setShowDeleteModal(false);
+                                setConfirmUsername("");
+                                setConfirmEmail("");
+                            }}
+                            className="flex-1 py-2 rounded-lg bg-slate-700 hover:bg-slate-600"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            onClick={async () => {
+                                if (
+                                    confirmUsername !== profile.username ||
+                                    confirmEmail !== user.email
+                                ) {
+                                    addMessage("Los datos no coinciden", "error");
+                                    return;
+                                }
+
+                                await handleDeleteAccount();
+
+                                setShowDeleteModal(false);
+                            }}
+                            className="flex-1 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!(confirmUsername == profile.username && confirmEmail == user.email)}
+                        >
+                            Eliminar definitivamente
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        )}
+    </>);
 }

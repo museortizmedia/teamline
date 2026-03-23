@@ -9,10 +9,14 @@ await dbService.remove("products", id);
 
 export const dbService = {
 
-    async getAll(table, query = "*") {
-        const { data, error } = await supabase
-            .from(table)
-            .select(query);
+    async getAll(table, query = "*", filters = {}) {
+        let req = supabase.from(table).select(query);
+
+        Object.entries(filters).forEach(([key, value]) => {
+            req = req.eq(key, value);
+        });
+
+        const { data, error } = await req;
 
         if (error) throw error;
         return data;

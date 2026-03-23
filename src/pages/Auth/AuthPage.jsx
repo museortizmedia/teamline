@@ -9,13 +9,16 @@ import {
     EyeOff
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "./AuthContext";
 
-export default function AuthPage() {
+export default function AuthPage({ defaultMode = "login" }) {
 
     const { loading, login, register } = useAuth();
 
-    const [mode, setMode] = useState("login");
+    const [mode, setMode] = useState(defaultMode);
+    useEffect(() => {
+        setMode(defaultMode);
+    }, [defaultMode]);
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -59,7 +62,7 @@ export default function AuthPage() {
 
     return (
 
-        <div className="min-h-screen bg-background-dark text-slate-100 flex items-center justify-center px-4">
+        <div className="min-h-[calc(100vh-20rem)] bg-background-dark text-slate-100 flex items-center justify-center px-4">
 
             {!loading ? (
                 <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl">
@@ -309,6 +312,20 @@ export default function AuthPage() {
 
                         </button>
 
+                    </div>
+
+                    <div className="mt-4 text-center">
+                        <p className="text-xs text-slate-500">
+                            Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad.
+                            <br /><br />
+                            Creado por <a href="https://museortizmedia.github.io/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Muse Ortiz Media</a>
+                        </p>
+                    </div>
+
+                    <div className="mt-4 text-center">
+                        <p className="text-xs text-slate-500">
+                            Versión 1.0.0-alpha
+                        </p>
                     </div>
 
                 </div>

@@ -1,6 +1,11 @@
-import { Home, History, MessageCircle, User, PlusCircle, Bell, Users, PlusSquare } from "lucide-react";
+import { Home, History, MessageCircle, User, PlusCircle, Bell, Users, PlusSquare, Settings } from "lucide-react";
+import { useTeam } from "../pages/Timeline/TeamContext";
+import { useAuth } from "../pages/Auth/AuthContext";
 
 export default function BottomNav({ current, setPage }) {
+
+    const { role } = useTeam();
+    const { user } = useAuth();
 
     const Item = ({ icon, label, page }) => (
         <button
@@ -20,27 +25,39 @@ export default function BottomNav({ current, setPage }) {
 
                 <Item
                     icon={<Home size={22} />}
-                    label="Home"
+                    label="My Teams"
                     page="dashboard"
                 />
 
                 <Item
                     icon={<Users size={22} />}
-                    label="Teams"
+                    label="TimeLine"
                     page="timeline"
                 />
 
-                <Item
-                    icon={<PlusSquare size={22} />}
-                    label="Crear"
-                    page="forum"
-                />
+                {user && (
+                    <Item
+                        icon={<PlusSquare size={22} />}
+                        label="Crear"
+                        page="newpost"
+                    />
+                )}
 
-                <Item
-                    icon={<Bell size={22} />}
-                    label="Actividad"
-                    page="forum"
-                />
+                {role == "creator" && (
+                    <Item
+                        icon={<Settings size={22} />}
+                        label="Ajustes"
+                        page="teamAdmin"
+                    />
+                )}
+
+                {role == "captain" && (
+                    <Item
+                        icon={<Bell size={22} />}
+                        label={"Foro"}
+                        page="forum"
+                    />
+                )}
 
                 <Item
                     icon={<User size={22} />}

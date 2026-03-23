@@ -1,4 +1,4 @@
-import { supabase } from "../../../services/supabase/lib/supabaseClient"
+import { supabase } from "../../services/supabase/lib/supabaseClient"
 
 export const authService = {
 
