@@ -1,4 +1,4 @@
-import { Home, History, MessageCircle, User, PlusCircle, Bell, Users, PlusSquare, Settings } from "lucide-react";
+import { Home, User, Bell, Users, PlusSquare, Settings } from "lucide-react";
 import { useTeam } from "../pages/Timeline/TeamContext";
 import { useAuth } from "../pages/Auth/AuthContext";
 

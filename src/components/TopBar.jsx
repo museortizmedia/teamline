@@ -2,17 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import {
     LogOut,
     Settings,
-    Users,
     User,
     PlusCircle,
     ChevronDown,
-    Crown,
-    ShieldCheck,
-    ClipboardCheck,
-    Briefcase,
-    CircleUser,
     LogIn,
-    UserPlus
+    UserPlus,
+    Home
 } from "lucide-react";
 
 import { useAuth } from "../pages/Auth/AuthContext";
@@ -232,7 +227,7 @@ export default function TopBar({ setPage }) {
                                         }}
                                         className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-slate-800"
                                     >
-                                        <Users size={16} />
+                                        <Home size={16} />
                                         My Teams
                                     </button>
 

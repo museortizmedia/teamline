@@ -1,8 +1,13 @@
 import { useState, useRef } from "react";
-import { X, Camera, Video } from "lucide-react";
+import { X, Video } from "lucide-react";
 import { teamService } from "../Timeline/teamService";
+import { useAuth } from "../Auth/AuthContext";
+import { useTeam } from "../Timeline/TeamContext";
 
-export default function CreateForumPostModal({ team, currentUser, isOpen, onClose, addPostToTimeline }) {
+
+export default function CreateForumPostModal({ isOpen, onClose, onPost }) {
+    const { user } = useAuth();
+    const { team } = useTeam();
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -44,14 +49,14 @@ export default function CreateForumPostModal({ team, currentUser, isOpen, onClos
         try {
             const post = await teamService.postForum({
                 teamId: team.team_id,
-                userId: currentUser.user_id,
+                userId: user.id,
                 title,
                 content,
                 date,
                 files
             });
 
-            addPostToTimeline(post);
+            onPost(post);
             onClose();
             setTitle("");
             setContent("");
@@ -59,7 +64,6 @@ export default function CreateForumPostModal({ team, currentUser, isOpen, onClos
             setVideoBlob(null);
         } catch (err) {
             console.error("Error creating forum post:", err);
-            alert("No se pudo crear el post.");
         }
     };
 

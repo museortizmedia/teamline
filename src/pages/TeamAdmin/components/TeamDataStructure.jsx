@@ -3,7 +3,7 @@ import { AlertTriangle } from "lucide-react";
 import { teamService } from "../../Timeline/teamService";
 import { useTeam } from "../../Timeline/TeamContext";
 
-export default function TeamDataStructure({ team, deleteTeamModal, setDeleteTeamModal }) {
+export default function TeamDataStructure({ team }) {
     const { reloadTeams } = useTeam();
 
     const [fields, setFields] = useState([
@@ -41,7 +41,6 @@ export default function TeamDataStructure({ team, deleteTeamModal, setDeleteTeam
         try {
             await teamService.deleteTeam({ teamId: team.team_id });
             reloadTeams(); // actualizar contexto
-            setDeleteTeamModal(false);
         } catch (err) {
             console.error("Error deleting team:", err);
         }

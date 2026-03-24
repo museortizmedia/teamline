@@ -8,7 +8,7 @@ import CreateForumPostModal from "./CreateForumPostModal";
 import { teamService } from "../Timeline/teamService";
 
 export default function ForumPage() {
-    const { user, profile } = useAuth();
+    const { user } = useAuth();
     const { team } = useTeam();
     const [posts, setPosts] = useState([]);
     const [members, setMembers] = useState([]);
@@ -17,10 +17,25 @@ export default function ForumPage() {
 
     useEffect(() => {
         async function loadData() {
+            // Cargar miembros del equipo
             const teamMembers = await teamService.getTeamMembers(team.team_id);
             setMembers(teamMembers);
-            const timelinePosts = await teamService.getTimeline(team.team_id);
-            setPosts(timelinePosts);
+
+            // Cargar posts del forum
+            const forumPosts = await teamService.getForumPosts(team.team_id);
+            // Mapear para incluir creator info desde members
+            const postsWithCreator = forumPosts.map(p => {
+                const creator = teamMembers.find(m => m.user_id === p.creator_id);
+                return {
+                    ...p,
+                    creator: {
+                        id: p.creator_id,
+                        display_name: creator?.display_name || "Unknown",
+                        role: creator?.role || "member"
+                    }
+                };
+            });
+            setPosts(postsWithCreator);
         }
         loadData();
     }, [team]);
@@ -38,20 +53,25 @@ export default function ForumPage() {
             .sort((a, b) => new Date(b.active_from) - new Date(a.active_from));
         return sameRoleMembers.length === 0 || sameRoleMembers[0].user_id === user.user_id;
     };
+
     const originRoleKeys = ["creator", "captain", "coach", "manager"];
-    const roleKeys = originRoleKeys.includes(team.role) ? [team.role] : []; // Filtra para solo ver los de su rol
+    const roleKeys = originRoleKeys.includes(team.role) ? [team.role] : [];
+
+    useEffect(() => {
+        setRoleFilter(roleKeys[0]);
+    }, [roleKeys]);
 
     return (
         <div className="min-h-screen bg-background-dark text-slate-100 max-w-7xl mx-auto flex flex-col overflow-hidden">
 
             {/* Role filter */}
             <div className="flex gap-3 p-4 overflow-x-auto border-b border-slate-800">
-                <button
+                {user.role === "creator" && <button
                     className={`flex h-9 items-center gap-2 rounded-full px-4 ${roleFilter === "all" ? "bg-primary shadow-lg shadow-primary/20" : "bg-card-dark border border-slate-400/30"}`}
                     onClick={() => setRoleFilter("all")}
                 >
                     <p className="text-white text-sm font-medium">All Roles</p>
-                </button>
+                </button>}
 
                 {roleKeys.map(role => {
                     const cfg = roleConfig[role];
@@ -65,20 +85,19 @@ export default function ForumPage() {
                         >
                             <Icon size={16} />
                             <p className={`text-sm font-medium ${selected ? cfg.text : cfg.color}`}>{cfg.label}</p>
-                            <ChevronDown size={14} className={`${selected ? cfg.text : cfg.border}`} />
                         </button>
                     );
                 })}
             </div>
 
-            {/* Timeline */}
+            {/* Forum posts */}
             <main className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
                 {filteredPosts.map(post => {
                     const cfg = roleConfig[post.creator.role] || roleConfig.member;
                     const Icon = cfg.icon;
 
                     return (
-                        <div key={post.post_id} className="grid grid-cols-[48px_1fr] gap-x-4">
+                        <div key={post.forum_post_id} className="grid grid-cols-[48px_1fr] gap-x-4">
                             <div className="flex flex-col items-center">
                                 <div className={`flex items-center justify-center h-12 w-12 rounded-full ${cfg.bg} border-2 ${cfg.border} shadow-lg`}>
                                     <Icon className={cfg.text} />
@@ -106,10 +125,6 @@ export default function ForumPage() {
                                             ))}
                                         </div>
                                     )}
-                                    <div className="flex gap-4 mt-3 text-slate-500 text-xs">
-                                        <span className="flex items-center gap-1"> <MessageCircle size={14} /> {post.comments?.length || 0} </span>
-                                        <span className="flex items-center gap-1"> <Eye size={14} /> {post.views || 0} </span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -131,9 +146,7 @@ export default function ForumPage() {
             <CreateForumPostModal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
-                onPost={newPost => setPosts([newPost, ...posts])}
-                currentUser={user}
-                team={team}
+                addPostToTimeline={newPost => setPosts([newPost, ...posts])}
             />
         </div>
     );
