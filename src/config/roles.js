@@ -8,6 +8,7 @@ import {
 
 export const roleConfig = {
     creator: {
+        color: "text-blue-600",
         bg: "bg-blue-600",
         text: "text-white",
         label: "Fundador",
@@ -15,6 +16,7 @@ export const roleConfig = {
         icon: Crown
     },
     captain: {
+        color: "text-yellow-500",
         bg: "bg-yellow-500",
         text: "text-gray-900",
         label: "Capitán",
@@ -22,6 +24,7 @@ export const roleConfig = {
         icon: ShieldCheck
     },
     coach: {
+        color: "text-indigo-600",
         bg: "bg-indigo-600",
         text: "text-white",
         label: "Entrenador",
@@ -29,6 +32,7 @@ export const roleConfig = {
         icon: ClipboardCheck
     },
     manager: {
+        color: "text-green-600",
         bg: "bg-green-600",
         text: "text-white",
         label: "Manager",
@@ -36,6 +40,7 @@ export const roleConfig = {
         icon: Briefcase
     },
     member: {
+        color: "text-gray-600",
         bg: "bg-gray-600",
         text: "text-white",
         label: "Miembro",

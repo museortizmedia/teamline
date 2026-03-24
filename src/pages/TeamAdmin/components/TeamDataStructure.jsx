@@ -49,80 +49,77 @@ export default function TeamDataStructure({ team, deleteTeamModal, setDeleteTeam
 
     return (
         <div className="space-y-6">
-            <h2 className="text-xl font-bold font-display">Member Data Fields</h2>
-
-            {fields.map((f, i) => (
-                <div key={i} className="flex gap-2">
-                    <input
-                        value={f.name}
-                        onChange={(e) => updateField(i, "name", e.target.value)}
-                        placeholder="Field name"
-                        className="flex-1 bg-slate-800 p-2 rounded text-sm"
-                    />
-                    <select
-                        value={f.type}
-                        onChange={(e) => updateField(i, "type", e.target.value)}
-                        className="bg-slate-800 p-2 rounded text-sm"
-                    >
-                        <option value="text">text</option>
-                        <option value="number">number</option>
-                        <option value="date">date</option>
-                    </select>
+            <div className="opacity-10" title="Estamos trabajando en esta caracteística">
+                <h2 className="text-xl font-bold font-display">Campos de datos de miembros</h2>
+                <p className="text-sm text-slate-400">Aquí podrás agregar campos personalizados para los miembros de tu equipo.</p>
+                <div className="mt-6 space-y-6">
+                    {fields.map((f, i) => (
+                        <div key={i} className="flex gap-2">
+                            <input
+                                value={f.name}
+                                onChange={(e) => updateField(i, "name", e.target.value)}
+                                placeholder="Field name"
+                                className="flex-1 bg-slate-800 p-2 rounded text-sm"
+                            />
+                            <select
+                                value={f.type}
+                                onChange={(e) => updateField(i, "type", e.target.value)}
+                                className="bg-slate-800 p-2 rounded text-sm"
+                            >
+                                <option value="text">text</option>
+                                <option value="number">number</option>
+                                <option value="date">date</option>
+                            </select>
+                        </div>
+                    ))}
                 </div>
-            ))}
 
-            <button
-                onClick={addField}
-                className="bg-primary px-4 py-2 rounded-lg"
-            >
-                Add Field
-            </button>
+                <button
+                    onClick={addField}
+                    className="mt-2 bg-primary px-4 py-2 rounded-lg"
+                >
+                    Crear campo
+                </button>
 
-            <div className="space-y-2 mt-4">
-                <h3 className="font-bold">Export</h3>
-                <textarea
-                    readOnly
-                    value={exportStruct()}
-                    className="w-full bg-slate-900 p-3 rounded h-28 text-xs font-mono"
-                />
-                <textarea
-                    readOnly
-                    value={exportJSON()}
-                    className="w-full bg-slate-900 p-3 rounded h-28 text-xs font-mono"
-                />
+                <div className="space-y-2 mt-4">
+                    <h3 className="font-bold">Export</h3>
+                    <textarea
+                        readOnly
+                        value={exportStruct()}
+                        className="w-full bg-slate-900 p-3 rounded h-28 text-xs font-mono"
+                    />
+                    <textarea
+                        readOnly
+                        value={exportJSON()}
+                        className="w-full bg-slate-900 p-3 rounded h-28 text-xs font-mono"
+                    />
+                </div>
             </div>
 
             {/* DANGER ZONE */}
             <div className="border-t border-slate-800 pt-6">
                 <h3 className="text-red-400 font-bold flex items-center gap-2">
-                    <AlertTriangle size={18} /> Danger Zone
+                    <AlertTriangle size={18} /> Zona de peligro
                 </h3>
 
                 <p className="text-sm text-slate-400 mt-2">
-                    Type <b>{team.name}</b> to confirm deletion
+                    Escribe <b>{team.name}</b> para confirmar la eliminación
                 </p>
 
                 <input
                     value={deleteText}
                     onChange={(e) => setDeleteText(e.target.value)}
                     className="w-full bg-slate-800 p-3 rounded mt-2"
-                    placeholder="Type team name to confirm"
+                    placeholder="Escribe el nombre del equipo para confirmar"
                 />
 
                 <div className="flex justify-end gap-3 mt-2">
-                    <button
-                        onClick={() => setDeleteTeamModal(false)}
-                        className="bg-slate-700 px-4 py-2 rounded"
-                    >
-                        Cancel
-                    </button>
-
                     <button
                         onClick={handleDeleteTeam}
                         disabled={deleteText !== team.name}
                         className="bg-red-600 px-4 py-2 rounded disabled:opacity-40"
                     >
-                        Delete Team
+                        Eliminar equipo
                     </button>
                 </div>
             </div>

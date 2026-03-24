@@ -218,6 +218,7 @@ export const teamService = {
             throw error;
         }
     },
+
     async deleteTimelinePost(postId) {
         try {
             // 1️⃣ Obtener media asociada
@@ -259,8 +260,6 @@ export const teamService = {
             throw error;
         }
     },
-    // Agregar esto dentro del objeto teamService:
-
     /**
      * Obtiene un post específico por su ID, incluyendo el perfil del creador,
      * el rol que tenía en ese equipo y la media asociada.
@@ -314,6 +313,67 @@ export const teamService = {
             };
         } catch (error) {
             console.error("Error fetching post by ID:", error);
+            throw error;
+        }
+    },
+
+    async postForum({ teamId, userId, title, content, date, files = [] }) {
+        try {
+            // 1️⃣ Crear el post
+            const post = await supabaseService.db.create("post_forum", {
+                team_id: teamId,
+                creator_id: userId,
+                title,
+                content,
+                post_date: date
+            });
+
+            // 2️⃣ Si no hay archivos, terminar
+            if (!files || files.length === 0) {
+                return post;
+            }
+
+            // 3️⃣ Subir archivos y registrar media
+            const mediaPromises = files.map(async (file, index) => {
+
+                const filePath = `${post.post_id}/${Date.now()}_${file.name}`;
+
+                // subir a storage
+                const { error: uploadError } = await supabaseService.storage.upload(
+                    "post-media",
+                    filePath,
+                    file
+                );
+
+                if (uploadError) throw uploadError;
+
+                // obtener URL pública
+                const { data: publicUrlData } = supabaseService.supabase
+                    .storage
+                    .from("post-media")
+                    .getPublicUrl(filePath);
+
+                const mediaUrl = publicUrlData.publicUrl;
+
+                // determinar tipo
+                const mediaType = file.type.startsWith("video")
+                    ? "video"
+                    : "image";
+
+                // guardar en DB
+                return supabaseService.db.create("post_media", {
+                    post_id: post.post_id,
+                    media_url: mediaUrl,
+                    media_type: mediaType
+                });
+            });
+
+            await Promise.all(mediaPromises);
+
+            return post;
+
+        } catch (error) {
+            console.error("Error creating post with media:", error);
             throw error;
         }
     },
@@ -392,13 +452,20 @@ export const teamService = {
             profile_pic: m.profiles.profile_pic
         }));
     },
+
     async changeMemberRole({ teamId, userId, role }) {
-        return supabaseService.db.update(
-            "team_memberships",
-            { team_id: teamId, user_id: userId },
-            { role }
-        );
+        const { data, error } = await supabaseService.supabase
+            .from("team_memberships")
+            .update({ role })
+            .eq("team_id", teamId)
+            .eq("user_id", userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     },
+
     async getJoinRequests(teamId) {
         // Implementa tu lógica para solicitudes pendientes
         return []; // placeholder

@@ -1,6 +1,6 @@
 // pages/TeamAdminPage.jsx
 import { useState } from "react";
-import { Shield, Users, Clock, AlertTriangle, Database } from "lucide-react";
+import { Shield, Users, Clock, AlertTriangle, Database, Settings } from "lucide-react";
 import { useTeam } from "../Timeline/TeamContext";
 import TeamMembers from "./components/TeamMembers";
 import TeamRoles from "./components/TeamRoles";
@@ -13,21 +13,20 @@ export default function TeamAdminPage() {
     const { team, role, loading } = useTeam();
     const [tab, setTab] = useState("members");
     const [deleteTeamModal, setDeleteTeamModal] = useState(false);
-    const [deleteText, setDeleteText] = useState("");
 
     if (loading) {
-        return <div className="flex justify-center p-10">Loading team...</div>;
+        return <div className="flex justify-center p-10">Cargando equipo...</div>;
     }
 
     if (!team) {
-        return <div className="flex justify-center p-10 text-slate-400">No team selected</div>;
+        return <div className="flex justify-center p-10 text-slate-400">No se seleccionó ningún equipo</div>;
     }
 
     if (role !== "creator") {
         return (
             <div className="flex flex-col items-center justify-center h-screen gap-4 text-slate-400">
-                <h2 className="text-xl font-bold">Access restricted</h2>
-                <p>Only the team creator can access this panel.</p>
+                <h2 className="text-xl font-bold">Acceso restringido</h2>
+                <p>Solo el creador del equipo puede acceder a este panel.</p>
             </div>
         );
     }
@@ -71,8 +70,8 @@ export default function TeamAdminPage() {
                         className={`w-full text-left p-3 rounded-lg flex gap-2 items-center ${tab === "structure" ? "bg-primary/20 text-primary" : "hover:bg-slate-800"
                             }`}
                     >
-                        <Database size={18} />
-                        <span className="hidden sm:block">Datos</span>
+                        <Settings size={18} />
+                        <span className="hidden sm:block">Ajustes</span>
                     </button>
                 </aside>
 

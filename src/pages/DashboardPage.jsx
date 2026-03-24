@@ -144,7 +144,7 @@ export default function Dashboard({ setPage }) {
                                         Ver Timeline
                                     </button>
                                     <button
-                                        onClick={() => setOpenPost(true)}
+                                        onClick={() => setPage("newpost")}
                                         className="flex-1 rounded-lg h-12 bg-white/10 border border-white/20 text-white font-bold flex items-center justify-center gap-2 p-2"
                                     >
                                         <PlusSquare size={20} />
