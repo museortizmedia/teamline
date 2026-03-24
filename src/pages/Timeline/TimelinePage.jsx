@@ -16,7 +16,7 @@ import { useTeam } from "./TeamContext";
 import { teamService } from "./teamService";
 import RoleBadge from "../../components/RoleBadge";
 
-import defaultAvatar from "../assets/default-avatar.webp";
+import defaultAvatar from "../../assets/default-avatar.webp";
 
 export default function TimelinePage({ teamId }) {
 
@@ -238,7 +238,7 @@ export default function TimelinePage({ teamId }) {
                                 <div
                                     className="h-full w-full rounded-full bg-cover bg-center"
                                     style={{
-                                        backgroundImage: `url(${teamline.team_pic || "https://images.unsplash.com/photo-1522778119026-d647f0596c20"})`,
+                                        backgroundImage: `url(${teamline.team_pic || defaultAvatar})`,
                                     }}
                                 />
                             </div>

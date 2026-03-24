@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Link as LinkIcon, Camera } from "lucide-react";
 import { teamService } from "../../Timeline/teamService";
 import { useTeam } from "../../Timeline/TeamContext";
+import { supabaseService } from "../../../services/supabase/services/supabaseService";
 
 export default function TeamDataStructure({ team }) {
     const { reloadTeams } = useTeam();
@@ -12,6 +13,8 @@ export default function TeamDataStructure({ team }) {
     ]);
 
     const [deleteText, setDeleteText] = useState("");
+    const [teamPic, setTeamPic] = useState(team.team_pic || null);
+    const [uploading, setUploading] = useState(false);
 
     /* ---------- FIELD HANDLERS ---------- */
     const addField = () => {
@@ -26,29 +29,113 @@ export default function TeamDataStructure({ team }) {
 
     /* ---------- EXPORT ---------- */
     const exportStruct = () => {
-        // Como struct tipo C#
         const struct = `struct MemberData {\n${fields
             .map(f => `  ${f.type} ${f.name};`)
             .join("\n")}\n}`;
         return struct;
     };
 
-    const exportJSON = () => {
-        return JSON.stringify(fields, null, 2);
-    };
+    const exportJSON = () => JSON.stringify(fields, null, 2);
 
+    /* ---------- TEAM HANDLERS ---------- */
     const handleDeleteTeam = async () => {
         try {
             await teamService.deleteTeam({ teamId: team.team_id });
-            reloadTeams(); // actualizar contexto
+            reloadTeams();
         } catch (err) {
             console.error("Error deleting team:", err);
         }
     };
 
+    const handleUploadTeamPic = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+
+        try {
+            // Comprimir imagen si quieres (opcional, similar a imageService)
+            // const compressedFile = await imageService.compressToWebP(file, 0.7);
+
+            const filePath = `team-pics/${team.team_id}.webp`;
+
+            // Eliminar foto anterior si existe
+            if (teamPic) {
+                try {
+                    await supabaseService.storage.remove("team-pics", `${team.team_id}.webp`);
+                } catch { }
+            }
+
+            // Subir nueva imagen
+            const { data: publicUrlData, error: uploadError } = supabaseService.supabase
+                .storage
+                .from("team-pics")
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const publicUrl = supabaseService.supabase
+                .storage
+                .from("team-pics")
+                .getPublicUrl(filePath).data.publicUrl;
+
+            // Actualizar solo el team_pic en la DB
+            const updatedTeam = await supabaseService.db.update(
+                "teams",
+                team.team_id,
+                { team_pic: publicUrl, updated_at: new Date() },
+                "team_id"
+            );
+
+            setTeamPic(publicUrl); // actualizar estado local
+            //reloadTeams(); // refrescar contexto
+        } catch (err) {
+            console.error("Error updating team pic:", err);
+        } finally {
+            setUploading(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
-            <div className="opacity-10" title="Estamos trabajando en esta caracteística">
+            {/* ---------- TEAM INFO ---------- */}
+            <div className="flex items-center gap-4 bg-slate-800 p-4 rounded">
+                {/* Foto del equipo */}
+                <div className="relative h-24 w-24 rounded-full border-4 border-primary p-1">
+                    <div
+                        className="h-full w-full rounded-full bg-cover bg-center"
+                        style={{ backgroundImage: `url(${teamPic || defaultAvatar})` }}
+                    />
+                    {/* Input invisible para subir nueva foto */}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleUploadTeamPic}
+                        disabled={uploading}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer rounded-full"
+                        title="Cambiar foto del equipo"
+                    />
+                </div>
+
+                {/* Info del equipo */}
+                <div className="flex-1">
+                    <h2 className="text-xl font-bold">{team.name}</h2>
+                    <p className="text-sm text-slate-400">
+                        Por seguridad, no se puede cambiar el nombre del equipo
+                    </p>
+                    <a
+                        href={`/t/${team.team_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary flex items-center gap-1 mt-1 text-sm"
+                    >
+                        <LinkIcon size={16} /> Ver timeline
+                    </a>
+                </div>
+            </div>
+
+            {/* ---------- MEMBER FIELDS ---------- */}
+            <div className="opacity-10" title="Estamos trabajando en esta característica">
                 <h2 className="text-xl font-bold font-display">Campos de datos de miembros</h2>
                 <p className="text-sm text-slate-400">Aquí podrás agregar campos personalizados para los miembros de tu equipo.</p>
                 <div className="mt-6 space-y-6">
