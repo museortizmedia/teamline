@@ -14,7 +14,7 @@ export default function CreateMemoryPage({ isOpen, onClose }) {
     if (!isOpen) return null;
 
     const { user } = useAuth();
-    const { team } = useTeam();
+    const { team, activeFrom, activeTo } = useTeam();
 
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
@@ -61,7 +61,7 @@ export default function CreateMemoryPage({ isOpen, onClose }) {
                     {/* RIGHT: DETAILS */}
                     <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col gap-6 p-6 overflow-y-auto bg-[#0B1220]">
 
-                        <MemoryCalendar date={date} setDate={setDate} />
+                        <MemoryCalendar date={date} setDate={setDate} minDate={team.foundation_date < activeFrom ? team.foundation_date : activeFrom} maxDate={activeTo} />
 
                         <MemoryDetails
                             title={title}

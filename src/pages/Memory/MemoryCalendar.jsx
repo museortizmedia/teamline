@@ -1,45 +1,40 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
-export default function MemoryCalendar({ date, setDate, locale = "es-ES" }) {
+export default function MemoryCalendar({
+    date,
+    setDate,
+    locale = "es-ES",
+    minDate,
+    maxDate
+}) {
     const [showPicker, setShowPicker] = useState(false);
 
-    const initialDate = date ? new Date(date) : new Date();
-
-    const [currentMonth, setCurrentMonth] = useState(
-        new Date(initialDate.getFullYear(), initialDate.getMonth(), 1)
-    );
-
-    const selectedDate = new Date(date);
-
     // ===============================
-    // 📅 HELPERS
+    // 🔹 HELPERS DE FECHA
     // ===============================
-    const getDaysInMonth = (year, month) => {
-        return new Date(year, month + 1, 0).getDate();
+    const createLocalDate = (year, month, day) => new Date(year, month, day, 0, 0, 0, 0);
+
+    const formatToLocalISO = (year, month, day) => {
+        const d = createLocalDate(year, month, day);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, "0");
+        const dd = String(d.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
     };
 
-    const getFirstDayOfWeek = (year, month) => {
-        return new Date(year, month, 1).getDay(); // 0 = Domingo
-    };
+    const isSameDay = (d1, d2) =>
+        d1.getFullYear() === d2.getFullYear() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getDate() === d2.getDate();
 
-    const formatToISO = (year, month, day) => {
-        const d = new Date(year, month, day);
-        return d.toISOString().split("T")[0];
-    };
+    const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 
-    const isSameDay = (d1, d2) => {
-        return (
-            d1.getFullYear() === d2.getFullYear() &&
-            d1.getMonth() === d2.getMonth() &&
-            d1.getDate() === d2.getDate()
-        );
-    };
+    const getFirstDayOfWeek = (year, month) => new Date(year, month, 1).getDay();
 
-    // Generar cabecera de días (L, M, X...) según el locale
     const getDaysHeader = () => {
         const days = [];
-        const baseDate = new Date(2024, 0, 7); // Un domingo
+        const baseDate = new Date(2024, 0, 7); // domingo
         for (let i = 0; i < 7; i++) {
             const d = new Date(baseDate);
             d.setDate(baseDate.getDate() + i);
@@ -48,39 +43,52 @@ export default function MemoryCalendar({ date, setDate, locale = "es-ES" }) {
         return days;
     };
 
+    const parseDateString = (str) => {
+        if (!str) return null;
+        const [y, m, d] = str.split("-").map(Number);
+        return createLocalDate(y, m - 1, d);
+    };
+
+    const min = parseDateString(minDate);
+    const max = parseDateString(maxDate);
+
+    const isDateDisabled = (date) => (min && date < min) || (max && date > max);
+
     // ===============================
-    // 📅 DATA
+    // 🔹 ESTADO DEL CALENDARIO
     // ===============================
+    const initialDate = date ? parseDateString(date) : new Date();
+    const [currentMonth, setCurrentMonth] = useState(
+        createLocalDate(initialDate.getFullYear(), initialDate.getMonth(), 1)
+    );
+    const selectedDate = date ? parseDateString(date) : null;
+
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
-
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfWeek(year, month);
 
-    const monthName = currentMonth.toLocaleDateString(locale, {
-        month: "long",
-        year: "numeric"
-    });
+    const monthName = currentMonth.toLocaleDateString(locale, { month: "long", year: "numeric" });
+
+    const canGoPrev = !min || createLocalDate(year, month - 1, 1) >= createLocalDate(min.getFullYear(), min.getMonth(), 1);
+    const canGoNext = !max || createLocalDate(year, month + 1, 1) <= createLocalDate(max.getFullYear(), max.getMonth(), 1);
 
     // ===============================
-    // 🎯 UI
+    // 🔹 RENDER
     // ===============================
     return (
         <div className="bg-[#101622] border border-slate-700 rounded-xl p-4">
 
             {/* HEADER */}
             <div className="flex justify-between items-center mb-3 relative">
-
                 <button
-                    onClick={() =>
-                        setCurrentMonth(new Date(year, month - 1, 1))
-                    }
-                    className="hover:bg-slate-800 p-1 rounded-full transition"
+                    disabled={!canGoPrev}
+                    onClick={() => setCurrentMonth(createLocalDate(year, month - 1, 1))}
+                    className={`p-1 rounded-full transition ${!canGoPrev ? "opacity-30 cursor-not-allowed" : "hover:bg-slate-800"}`}
                 >
                     <ChevronLeft size={18} className="text-slate-400" />
                 </button>
 
-                {/* CLICKABLE */}
                 <button
                     onClick={() => setShowPicker(prev => !prev)}
                     className="text-xs font-bold uppercase tracking-wide hover:text-primary transition"
@@ -89,10 +97,9 @@ export default function MemoryCalendar({ date, setDate, locale = "es-ES" }) {
                 </button>
 
                 <button
-                    onClick={() =>
-                        setCurrentMonth(new Date(year, month + 1, 1))
-                    }
-                    className="hover:bg-slate-800 p-1 rounded-full transition"
+                    disabled={!canGoNext}
+                    onClick={() => setCurrentMonth(createLocalDate(year, month + 1, 1))}
+                    className={`p-1 rounded-full transition ${!canGoNext ? "opacity-30 cursor-not-allowed" : "hover:bg-slate-800"}`}
                 >
                     <ChevronRight size={18} className="text-slate-400" />
                 </button>
@@ -100,15 +107,10 @@ export default function MemoryCalendar({ date, setDate, locale = "es-ES" }) {
                 {/* PICKER */}
                 {showPicker && (
                     <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-[#020617] border border-slate-700 rounded-xl p-3 flex gap-2 z-50 shadow-xl">
-
-                        {/* MONTH */}
                         <select
                             value={month}
-                            onChange={(e) => {
-                                const newMonth = parseInt(e.target.value);
-                                setCurrentMonth(new Date(year, newMonth, 1));
-                            }}
-                            className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 outline-none focus:border-primary"
+                            onChange={(e) => setCurrentMonth(createLocalDate(year, parseInt(e.target.value), 1))}
+                            className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 outline-none"
                         >
                             {Array.from({ length: 12 }).map((_, i) => (
                                 <option key={i} value={i}>
@@ -117,86 +119,111 @@ export default function MemoryCalendar({ date, setDate, locale = "es-ES" }) {
                             ))}
                         </select>
 
-                        {/* YEAR */}
                         <select
                             value={year}
-                            onChange={(e) => {
-                                const newYear = parseInt(e.target.value);
-                                setCurrentMonth(new Date(newYear, month, 1));
-                            }}
-                            className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 outline-none focus:border-primary"
+                            onChange={(e) => setCurrentMonth(createLocalDate(parseInt(e.target.value), month, 1))}
+                            className="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 outline-none"
                         >
                             {Array.from({ length: 50 }).map((_, i) => {
                                 const y = new Date().getFullYear() - 25 + i;
-                                return (
-                                    <option key={y} value={y}>
-                                        {y}
-                                    </option>
-                                );
+                                return <option key={y} value={y}>{y}</option>;
                             })}
                         </select>
-
                     </div>
                 )}
-
             </div>
 
             {/* DAYS HEADER */}
             <div className="grid grid-cols-7 text-xs text-slate-500 mb-1">
                 {getDaysHeader().map((d, i) => (
-                    <span key={i} className="text-center font-medium">
-                        {d}
-                    </span>
+                    <span key={i} className="text-center font-medium">{d}</span>
                 ))}
             </div>
 
             {/* GRID */}
             <div className="grid grid-cols-7 gap-y-1 text-sm justify-items-center">
+                {Array.from({ length: firstDay }).map((_, i) => <div key={"empty-" + i} className="h-8 w-8" />)}
 
-                {/* EMPTY SPACES */}
-                {Array.from({ length: firstDay }).map((_, i) => (
-                    <div key={"empty-" + i} className="h-8 w-8" />
-                ))}
-
-                {/* DAYS */}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                     const day = i + 1;
-                    const current = new Date(year, month, day);
-                    const isSelected = isSameDay(current, selectedDate);
+                    const current = createLocalDate(year, month, day);
+                    const isSelected = selectedDate && isSameDay(current, selectedDate);
+                    const isDisabled = isDateDisabled(current);
 
                     return (
                         <button
                             key={day}
+                            disabled={isDisabled}
                             onClick={() => {
-                                setDate(formatToISO(year, month, day));
+                                if (isDisabled) return;
+                                setDate(formatToLocalISO(year, month, day));
                                 setShowPicker(false);
                             }}
                             className={`
-                                h-8 w-8 flex items-center justify-center rounded-full transition
-                                ${isSelected
-                                    ? "bg-primary text-white font-bold"
-                                    : "hover:bg-slate-700 text-slate-300"}
-                            `}
+                h-8 w-8 flex items-center justify-center rounded-full transition
+                ${isDisabled
+                                    ? "text-slate-600 opacity-40 cursor-not-allowed"
+                                    : isSelected
+                                        ? "bg-primary text-white font-bold"
+                                        : "hover:bg-slate-700 text-slate-300"
+                                }
+              `}
                         >
                             {day}
                         </button>
                     );
                 })}
-
             </div>
 
             {/* FEEDBACK */}
-            <p className="text-[10px] text-primary/70 text-center mt-3">
-                {locale.startsWith("es") ? "Fecha seleccionada:" : "Selected date:"}{" "}
-                <span className="font-medium text-slate-300">
-                    {selectedDate.toLocaleDateString(locale, {
+            <div className="mt-4 flex flex-col items-center gap-2">
+
+                {/* 1️⃣ Fecha seleccionada */}
+                <span className="text-sm font-semibold text-white">
+                    {selectedDate?.toLocaleDateString(locale, {
                         month: "short",
                         day: "numeric",
                         year: "numeric"
                     })}
                 </span>
-            </p>
 
+                {/* 2️⃣ Límites mínimo y máximo */}
+                {(minDate || maxDate) && (
+                    <div className="flex justify-between w-full px-4 text-[10px] text-slate-400">
+                        {minDate && (
+                            <span>
+                                {locale.startsWith("es") ? "Fecha mínima:" : "Minimum date:"}{" "}
+                                <span className="font-medium text-slate-300">
+                                    {parseDateString(minDate).toLocaleDateString(locale, {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric"
+                                    })}
+                                </span>
+                            </span>
+                        )}
+                        {maxDate && (
+                            <span>
+                                {locale.startsWith("es") ? "Fecha máxima:" : "Maximum date:"}{" "}
+                                <span className="font-medium text-slate-300">
+                                    {parseDateString(maxDate).toLocaleDateString(locale, {
+                                        month: "short",
+                                        day: "numeric",
+                                        year: "numeric"
+                                    })}
+                                </span>
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                {/* 3️⃣ Nota informativa */}
+                <span className="text-[10px] text-slate-500 text-center px-4">
+                    {locale.startsWith("es")
+                        ? "Sólo puedes publicar en tus fechas activas como miembro."
+                        : "You can only add memories on your active member dates."}
+                </span>
+            </div>
         </div>
     );
 }

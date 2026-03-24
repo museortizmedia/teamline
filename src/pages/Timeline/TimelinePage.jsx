@@ -293,7 +293,7 @@ export default function TimelinePage({ teamId }) {
 
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-extrabold font-mono text-slate-400">
-                                            {new Date(moment.date).toLocaleDateString("en-US", {
+                                            {new Date(moment.date).toLocaleDateString("es-ES", {
                                                 month: "short",
                                                 day: "2-digit",
                                                 year: "numeric"

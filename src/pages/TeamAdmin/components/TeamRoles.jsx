@@ -33,7 +33,7 @@ export default function TeamRoles({ team }) {
                         >
                             <option value="manager">Manager</option>
                             <option value="coach">Entrenador</option>
-                            <option value="captain">Caitán</option>
+                            <option value="captain">Capitán</option>
                             <option value="member">Miembro</option>
                         </select>
                     )}

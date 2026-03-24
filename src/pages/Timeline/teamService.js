@@ -14,7 +14,9 @@ export const teamService = {
             const data = await supabaseService.db.getAll("team_memberships", `
         role,
         profiles(*),
-        teams(*)
+        teams(*),
+        active_from,
+        active_to
       `);
 
             console.log("data:", data);
@@ -25,7 +27,9 @@ export const teamService = {
             // Mapear la estructura para frontend
             return userTeams.map(m => ({
                 ...m.teams,
-                role: m.role
+                role: m.role,
+                active_from: m.active_from,
+                active_to: m.active_to
             }));
         } catch (error) {
             console.error("Error fetching user teams:", error);
@@ -374,7 +378,7 @@ export const teamService = {
     async getTeamMembers(teamId) {
         const data = await supabaseService.db.getAll(
             "team_memberships",
-            "user_id, role, profiles(*)",
+            "user_id, role, active_from, active_to, profiles(username, display_name, profile_pic)",
             { team_id: teamId }
         );
 
@@ -382,7 +386,10 @@ export const teamService = {
             user_id: m.user_id,
             username: m.profiles.username,
             role: m.role,
-            active_from: m.active_from
+            active_from: m.active_from,
+            active_to: m.active_to,
+            display_name: m.profiles.display_name,
+            profile_pic: m.profiles.profile_pic
         }));
     },
     async changeMemberRole({ teamId, userId, role }) {
