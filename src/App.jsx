@@ -5,14 +5,14 @@ import { useAuth } from "./pages/Auth/AuthContext";
 import TopBar from "./components/TopBar";
 import BottomNav from "./components/BottomNav";
 
-import AuthPage from "./pages/Auth/AuthPage";
-import DashboardPage from "./pages/DashboardPage";
-import TimelinePage from "./pages/Timeline/TimelinePage";
-import ForumPage from "./pages/Forum/ForumPage";
-import ProfilePage from "./pages/ProfilePage";
-import TeamAdminPage from "./pages/TeamAdmin/TeamAdminPage";
-import PostPage from "./pages/PostPage";
-import CreateMemoryPage from "./pages/Memory/CreateMemoryPage";
+const AuthPage = lazy(() => import("./pages/Auth/AuthPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const TimelinePage = lazy(() => import("./pages/Timeline/TimelinePage"));
+const ForumPage = lazy(() => import("./pages/Forum/ForumPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const TeamAdminPage = lazy(() => import("./pages/TeamAdmin/TeamAdminPage"));
+const PostPage = lazy(() => import("./pages/PostPage"));
+const CreateMemoryPage = lazy(() => import("./pages/Memory/CreateMemoryPage"));
 
 import { useRouterApp } from "./RouterApp";
 

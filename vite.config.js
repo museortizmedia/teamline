@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
@@ -12,10 +12,7 @@ export default defineConfig({
           if (id.includes('node_modules')) {
 
             // React core
-            if (
-              id.includes('react') ||
-              id.includes('react-dom')
-            ) {
+            if (id.includes('react') || id.includes('react-dom')) {
               return 'vendor-react';
             }
 
@@ -29,12 +26,11 @@ export default defineConfig({
               return 'vendor-supabase';
             }
 
-            // resto de librerías
+            // Resto de librerías de node_modules
             return 'vendor';
           }
 
           // 🔹 FEATURES (tu app)
-
           if (id.includes('/Memory/')) {
             return 'feature-memory';
           }
@@ -51,8 +47,10 @@ export default defineConfig({
             return 'services';
           }
 
+          // Si no coincide con nada, no separar
+          return undefined;
         }
       }
     }
   }
-})
+});
