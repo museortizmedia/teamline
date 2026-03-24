@@ -5,6 +5,8 @@ import { useAuth } from "./Auth/AuthContext";
 import { teamService } from "./Timeline/teamService";
 import RoleBadge from "../components/RoleBadge";
 
+import defaultAvatar from "../assets/default-avatar.webp";
+
 export default function PostPage({ setPage, postId }) {
     const { user, isAuthenticated } = useAuth();
 
@@ -101,7 +103,7 @@ export default function PostPage({ setPage, postId }) {
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
                                 <img
-                                    src={post.creator?.avatar || "https://i.pravatar.cc/40"}
+                                    src={post.creator?.avatar || defaultAvatar}
                                     className="h-10 w-10 rounded-full border-2 border-primary"
                                     alt="Avatar"
                                 />

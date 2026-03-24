@@ -16,6 +16,7 @@ import { useTeam } from "./TeamContext";
 import { teamService } from "./teamService";
 import RoleBadge from "../../components/RoleBadge";
 
+import defaultAvatar from "../assets/default-avatar.webp";
 
 export default function TimelinePage({ teamId }) {
 
@@ -342,7 +343,7 @@ export default function TimelinePage({ teamId }) {
 
                                                 <div className="flex items-center gap-2 min-w-0"> {/* min-w-0 permite que el texto trunque si es necesario */}
                                                     <img
-                                                        src={moment.avatar || "https://i.pravatar.cc/40"}
+                                                        src={moment.avatar || defaultAvatar}
                                                         className="h-8 w-8 rounded-full flex-shrink-0"
                                                     />
                                                     <div className="flex flex-col min-w-0">
