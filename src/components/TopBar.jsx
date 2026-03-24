@@ -7,7 +7,11 @@ import {
     ChevronDown,
     LogIn,
     UserPlus,
-    Home
+    Home,
+    DownloadIcon,
+    Contact,
+    MessageCircle,
+    HelpCircle
 } from "lucide-react";
 
 import { useAuth } from "../pages/Auth/AuthContext";
@@ -17,8 +21,12 @@ import defaultAvatar from "../assets/default-avatar.webp";
 import defaultTeam from "../assets/default-avatar.webp";
 import { roleConfig } from "../config/roles";
 import RoleBadge from "./RoleBadge";
+import { usePWAInstall } from "../hooks/usePWAInstall";
 
 export default function TopBar({ setPage }) {
+
+    //PWA
+    const { isInstallable, installApp } = usePWAInstall();
 
     const { logout, profile } = useAuth();
     const { team, teams, selectTeam } = useTeam();
@@ -45,12 +53,22 @@ export default function TopBar({ setPage }) {
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 backdrop-blur-md bg-[#101622]/80 border-b border-slate-800 text-white">
+
             <div className="max-w-7xl mx-auto w-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
                 {/* LEFT */}
                 <div className="flex justify-start min-w-0">
 
                     {!isAuth && (
                         <div className="flex items-center gap-2">
+                            {isInstallable && (
+                                <button
+                                    onClick={installApp}
+                                    className="px-3 py-1.5 text-sm rounded-lg bg-[var(--color-primary)] hover:opacity-90 text-white flex flex-row items-center gap-2"
+                                >
+                                    <DownloadIcon size={16} />
+                                    <span className="hidden sm:block">Instalar</span>
+                                </button>
+                            )}
 
                             <button
                                 onClick={() => setPage("auth", { defaultMode: "register" })}
@@ -181,6 +199,16 @@ export default function TopBar({ setPage }) {
                                 <span className="hidden sm:block">Iniciar Sesión</span>
                             </button>
 
+                            <button
+                                onClick={() => window.open('https://wa.me/573197293775', '_blank')}
+                                className="px-3 py-1.5 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 text-white flex flex-row items-center gap-2"
+                            >
+                                <MessageCircle size={16} />
+                                <span className="hidden sm:block">Contacto</span>
+                            </button>
+
+
+
                         </div>
                     )}
 
@@ -241,6 +269,24 @@ export default function TopBar({ setPage }) {
                                         <Settings size={16} />
                                         Manage Teams
                                     </button>
+
+                                    <button
+                                        onClick={() => window.open('https://wa.me/573197293775', '_blank')}
+                                        className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-slate-800"
+                                    >
+                                        <HelpCircle size={16} />
+                                        Soporte
+                                    </button>
+
+                                    {isInstallable && (
+                                        <button
+                                            onClick={installApp}
+                                            className="w-full flex items-center gap-2 px-4 py-3 text-sm hover:bg-slate-800"
+                                        >
+                                            <DownloadIcon size={16} />
+                                            Instalar
+                                        </button>
+                                    )}
 
                                     <div className="border-t border-slate-800" />
 
