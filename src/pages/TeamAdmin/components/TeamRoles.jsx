@@ -95,22 +95,26 @@ export default function TeamRoles({ team }) {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-xl font-bold font-display">Gestión de roles</h2>
+            <section className="fixed top-[4.9rem] left-[33.3333%] md:left-[16.6667%] right-0 z-[100] px-6 bg-[#101622]/80 backdrop-blur-md border-b border-slate-800 ">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h2 className="text-xl font-bold font-display">Gestión de roles</h2>
 
-            {/* Búsqueda */}
-            <div className="relative w-full sm:w-64 mb-3">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                    type="text"
-                    placeholder="Buscar miembros..."
-                    value={filterQuery}
-                    onChange={(e) => setFilterQuery(e.target.value)}
-                    className="w-full bg-slate-900/50 border border-slate-700 rounded-full py-1.5 pl-9 pr-4 text-xs"
-                />
-            </div>
+                    {/* Búsqueda */}
+                    <div className="mt-2 relative w-full sm:w-64 mb-3">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                        <input
+                            type="text"
+                            placeholder="Buscar miembros..."
+                            value={filterQuery}
+                            onChange={(e) => setFilterQuery(e.target.value)}
+                            className="w-full bg-slate-900/50 border border-slate-700 rounded-full py-1.5 pl-9 pr-4 text-xs"
+                        />
+                    </div>
+                </div>
+            </section>
 
             {/* Lista */}
-            <div className="space-y-3">
+            <div className="pt-5 space-y-3">
                 {filteredMembers.map((m) => {
                     const role = roleConfig[m.role] || roleConfig.member;
                     const isEditing = editingDates[m.user_id];

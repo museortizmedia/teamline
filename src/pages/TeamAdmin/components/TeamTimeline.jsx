@@ -71,7 +71,7 @@ export default function TeamTimeline({ team }) {
         <div className="space-y-4">
 
             {/* ---------- FILTERS ---------- */}
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="fixed top-[4.9rem] left-[33.3333%] md:left-[16.6667%] right-0 z-[100] bg-[#101622]/80 backdrop-blur-md border-b border-slate-800 p-4 flex flex-col sm:flex-row gap-2">
 
                 {/* Search */}
                 <div className="relative flex-1">
@@ -104,54 +104,56 @@ export default function TeamTimeline({ team }) {
             </div>
 
             {/* ---------- LIST ---------- */}
-            {filteredTimeline.map(post => {
-                const canDelete = ALLOWED_DELETE_ROLES.includes(team.role);
-                const isFoundationPost = team.foundation_date === post.date;
+            <section className="pt-10">
+                {filteredTimeline.map(post => {
+                    const canDelete = ALLOWED_DELETE_ROLES.includes(team.role);
+                    const isFoundationPost = team.foundation_date === post.date;
 
-                return (
-                    <div
-                        key={post.id}
-                        className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex justify-between items-center"
-                    >
-                        <div>
-                            <p className="font-semibold">{post.title || post.text}</p>
-                            {post.title && (
-                                <p className="text-sm text-slate-400">{post.text}</p>
+                    return (
+                        <div
+                            key={post.id}
+                            className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex justify-between items-center"
+                        >
+                            <div>
+                                <p className="font-semibold">{post.title || post.text}</p>
+                                {post.title && (
+                                    <p className="text-sm text-slate-400">{post.text}</p>
+                                )}
+                                <p className="text-xs text-slate-400 mt-1">
+                                    {new Date(post.date).toLocaleDateString("es-ES", {
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric"
+                                    })}
+                                </p>
+                            </div>
+
+                            {/* DELETE BUTTON */}
+                            {canDelete && !isFoundationPost && (
+                                <button
+                                    onClick={() =>
+                                        setConfirmDelete({
+                                            postId: post.id,
+                                            text: post.title || post.text
+                                        })
+                                    }
+                                    className="text-red-400 hover:text-red-300"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
                             )}
-                            <p className="text-xs text-slate-400 mt-1">
-                                {new Date(post.date).toLocaleDateString("es-ES", {
-                                    day: "numeric",
-                                    month: "long",
-                                    year: "numeric"
-                                })}
-                            </p>
                         </div>
+                    );
+                })}
 
-                        {/* DELETE BUTTON */}
-                        {canDelete && !isFoundationPost && (
-                            <button
-                                onClick={() =>
-                                    setConfirmDelete({
-                                        postId: post.id,
-                                        text: post.title || post.text
-                                    })
-                                }
-                                className="text-red-400 hover:text-red-300"
-                            >
-                                <Trash2 size={18} />
-                            </button>
-                        )}
+                {filteredTimeline.length === 0 && (
+                    <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl">
+                        <p className="text-slate-500 text-sm">
+                            No hay resultados con los filtros aplicados.
+                        </p>
                     </div>
-                );
-            })}
-
-            {filteredTimeline.length === 0 && (
-                <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl">
-                    <p className="text-slate-500 text-sm">
-                        No hay resultados con los filtros aplicados.
-                    </p>
-                </div>
-            )}
+                )}
+            </section>
 
             {/* ---------- MODAL DELETE ---------- */}
             {confirmDelete && (
