@@ -215,7 +215,7 @@ export default function TimelinePage({ teamId }) {
                         const isOpen = openComments[moment.id];
 
                         return (
-                            <div key={moment.id} className="relative mb-10 grid grid-cols-[40px_1fr] gap-4 cursor-pointer" onClick={() => window.open(`/p/${moment.id}`, "_blank")}>
+                            <div key={moment.id} className="relative mb-10 grid grid-cols-[40px_1fr] gap-4 cursor-pointer">
 
                                 <div className="z-10 flex flex-col items-center pt-2">
                                     <div className={`flex h-10 w-10 items-center justify-center rounded-full ${moment.accent}`}>
@@ -231,9 +231,9 @@ export default function TimelinePage({ teamId }) {
                                         <div className="h-px flex-1 bg-slate-700" />
                                     </div>
 
-                                    <div className="overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-800 p-4">
+                                    <div className="overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-800 p-4" >
 
-                                        <h3 className="font-bold text-lg">{moment.title}</h3>
+                                        <h3 className="font-bold text-lg" onClick={() => window.open(`/p/${moment.id}`, "_blank")}>{moment.title}</h3>
                                         <p className="mt-1 text-sm text-slate-400">{moment.text}</p>
 
                                         {/* MEDIA HERO / GRID */}
@@ -340,37 +340,57 @@ export default function TimelinePage({ teamId }) {
             {/* MODAL DE IMAGEN */}
             {modalOpen && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-2 sm:p-4"
+                    className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
                     onClick={closeModal}
                 >
-                    {/* Contenedor relativo para el botón y la imagen */}
+
+                    {/* BOTÓN CERRAR */}
+                    <button
+                        className="absolute top-4 right-4 z-[60] p-2 text-white/70 hover:text-white bg-black/40 rounded-full"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            closeModal();
+                        }}
+                    >
+                        <X size={32} />
+                    </button>
+
+                    {/* CONTENEDOR INTERNO */}
                     <div
-                        className="relative w-[90%] h-[90%] flex items-center justify-center"
+                        className="w-screen h-screen flex items-center justify-center p-4"
                         onClick={(e) => e.stopPropagation()}
                     >
+                        <div className="relative flex items-center justify-center">
 
-                        {/* BOTÓN CERRAR: Posicionado en la esquina superior derecha de la pantalla */}
-                        <button
-                            className="absolute top-4 right-4 z-[60] p-2 text-white/70 hover:text-white bg-black/10 hover:bg-black/20 rounded-full transition-all duration-200"
-                            onClick={closeModal}
-                            aria-label="Cerrar modal"
-                        >
-                            <X size={32} />
-                        </button>
+                            {/* SKELETON */}
+                            {!modalImages[modalIndex]?.loaded && (
+                                <div className="absolute inset-0 bg-slate-700 animate-pulse rounded" />
+                            )}
 
-                        {/* IMAGEN CON LETTERBOXING */}
-                        <div className="w-full h-full flex items-center justify-center">
-                            <ImageWithSkeleton
-                                src={modalImages[modalIndex].url}
+                            <img
+                                src={modalImages[modalIndex]?.url}
                                 alt="Imagen del post"
-                                /* object-contain: asegura que la imagen se vea completa sin recortarse.
-                                   w-full h-full: le dice que use todo el espacio del contenedor padre.
-                                */
-                                className="w-full h-full object-contain selection:bg-none"
-                                loading="eager" // Cambiado a eager para que cargue rápido al abrir el modal
+                                onClick={(e) => e.stopPropagation()}
+                                onLoad={() => {
+                                    setModalImages(prev =>
+                                        prev.map((img, i) =>
+                                            i === modalIndex ? { ...img, loaded: true } : img
+                                        )
+                                    );
+                                }}
+                                className="
+                        object-contain 
+                        rounded
+                        transition-opacity duration-300
+                        max-w-[calc(100vw-2rem)]
+                        max-h-[calc(100vh-2rem)]
+                    "
+                                style={{
+                                    opacity: modalImages[modalIndex]?.loaded ? 1 : 0
+                                }}
                             />
-                        </div>
 
+                        </div>
                     </div>
                 </div>
             )}
