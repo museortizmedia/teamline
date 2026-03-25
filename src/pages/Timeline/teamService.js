@@ -51,7 +51,7 @@ export const teamService = {
         name,
         creatorId,
         foundation_date,
-        logoFile // 🔥 ahora recibe archivo, no URL
+        logoFile
     }) {
         let team = null;
 
@@ -76,7 +76,7 @@ export const teamService = {
                 teamId: team.team_id,
                 userId: creatorId,
                 title: "Fundación del equipo",
-                content: `Este equipo fue fundado el ${foundation_date}`,
+                content: `Este equipo fue fundado el ${new Date(foundation_date).toLocaleDateString("es-ES", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}`,
                 date: foundation_date
             });
 
@@ -154,7 +154,15 @@ export const teamService = {
         });
     },
     async leaveTeam({ teamId, userId }) {
-        return supabaseService.db.remove("team_memberships", { team_id: teamId, user_id: userId });
+        const { error } = await supabaseService.supabase
+            .from("team_memberships")
+            .delete()
+            .eq("team_id", teamId)
+            .eq("user_id", userId);
+
+        if (error) throw error;
+
+        return true;
     },
 
     // TEAM POST MEMORYES
@@ -435,6 +443,26 @@ export const teamService = {
         const { data, error } = await supabaseService.supabase
             .from("team_memberships")
             .update({ role })
+            .eq("team_id", teamId)
+            .eq("user_id", userId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    async updateMemberDates({ teamId, userId, active_from, active_to }) {
+        const payload = {
+            updated_at: new Date()
+        };
+
+        if (active_from !== undefined) payload.active_from = active_from;
+        if (active_to !== undefined) payload.active_to = active_to;
+
+        const { data, error } = await supabaseService.supabase
+            .from("team_memberships")
+            .update(payload)
             .eq("team_id", teamId)
             .eq("user_id", userId)
             .select()

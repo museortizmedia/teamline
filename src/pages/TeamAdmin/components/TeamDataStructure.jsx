@@ -4,6 +4,9 @@ import { teamService } from "../../Timeline/teamService";
 import { useTeam } from "../../Timeline/TeamContext";
 import { supabaseService } from "../../../services/supabase/services/supabaseService";
 
+import defaultAvatar from "../../../assets/default-avatar.webp";
+import { useAuth } from "../../Auth/AuthContext";
+
 export default function TeamDataStructure({ team }) {
     const { reloadTeams } = useTeam();
 
@@ -12,6 +15,7 @@ export default function TeamDataStructure({ team }) {
         { name: "Number", type: "number" }
     ]);
 
+    const { user } = useAuth();
     const [deleteText, setDeleteText] = useState("");
     const [teamPic, setTeamPic] = useState(team.team_pic || null);
     const [uploading, setUploading] = useState(false);
@@ -44,6 +48,15 @@ export default function TeamDataStructure({ team }) {
             reloadTeams();
         } catch (err) {
             console.error("Error deleting team:", err);
+        }
+    };
+
+    const handleLeaveTeam = async () => {
+        try {
+            await teamService.leaveTeam({ teamId: team.team_id, userId: user.id });
+            reloadTeams();
+        } catch (err) {
+            console.error("Error leaving team:", err);
         }
     };
 
@@ -101,12 +114,18 @@ export default function TeamDataStructure({ team }) {
             {/* ---------- TEAM INFO ---------- */}
             <div className="flex items-center gap-4 bg-slate-800 p-4 rounded">
                 {/* Foto del equipo */}
-                <div className="relative h-24 w-24 rounded-full border-4 border-primary p-1">
+                <div className="relative h-24 w-24 rounded-full border-4 border-primary p-1 group">
                     <div
                         className="h-full w-full rounded-full bg-cover bg-center"
                         style={{ backgroundImage: `url(${teamPic || defaultAvatar})` }}
                     />
-                    {/* Input invisible para subir nueva foto */}
+
+                    {/* Overlay con icono */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 rounded-full transition">
+                        <Camera size={22} className="text-white" />
+                    </div>
+
+                    {/* Input invisible */}
                     <input
                         type="file"
                         accept="image/*"
@@ -182,33 +201,95 @@ export default function TeamDataStructure({ team }) {
                 </div>
             </div>
 
-            {/* DANGER ZONE */}
-            <div className="border-t border-slate-800 pt-6">
-                <h3 className="text-red-400 font-bold flex items-center gap-2">
-                    <AlertTriangle size={18} /> Zona de peligro
-                </h3>
+            {/* ================= DELETE TEAM (CRITICAL) ================= */}
+            {team.role === "creator" && (
+                <div className="border-t border-slate-800 pt-6">
+                    <div className="bg-red-500/10 border border-red-500/40 rounded-xl p-5 space-y-4">
 
-                <p className="text-sm text-slate-400 mt-2">
-                    Escribe <b>{team.name}</b> para confirmar la eliminación
-                </p>
+                        <h3 className="text-red-400 font-bold flex items-center gap-2 text-lg">
+                            <AlertTriangle size={20} />
+                            Eliminar equipo permanentemente
+                        </h3>
 
-                <input
-                    value={deleteText}
-                    onChange={(e) => setDeleteText(e.target.value)}
-                    className="w-full bg-slate-800 p-3 rounded mt-2"
-                    placeholder="Escribe el nombre del equipo para confirmar"
-                />
+                        <p className="text-sm text-slate-300">
+                            Esta acción eliminará <b>definitivamente</b> el equipo para todos los miembros.
+                        </p>
 
-                <div className="flex justify-end gap-3 mt-2">
-                    <button
-                        onClick={handleDeleteTeam}
-                        disabled={deleteText !== team.name}
-                        className="bg-red-600 px-4 py-2 rounded disabled:opacity-40"
-                    >
-                        Eliminar equipo
-                    </button>
+                        <ul className="text-xs text-red-300 list-disc pl-4 space-y-1">
+                            <li>Se eliminarán todos los miembros</li>
+                            <li>Se borrará el timeline completo</li>
+                            <li>Se eliminarán posts, comentarios y media</li>
+                            <li>No se podrá recuperar la información</li>
+                        </ul>
+
+                        <div className="space-y-2">
+                            <p className="text-xs text-slate-400">
+                                Escribe <b>{team.name}</b> para confirmar:
+                            </p>
+
+                            <input
+                                value={deleteText}
+                                onChange={(e) => setDeleteText(e.target.value)}
+                                className="w-full bg-slate-900 border border-red-500/30 p-3 rounded-lg text-sm"
+                                placeholder="Confirmar nombre del equipo"
+                            />
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                onClick={handleDeleteTeam}
+                                disabled={deleteText !== team.name}
+                                className="bg-red-600 hover:bg-red-700 px-5 py-2 rounded-lg font-semibold disabled:opacity-40"
+                            >
+                                Eliminar equipo
+                            </button>
+                        </div>
+
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* ================= LEAVE TEAM (SOFT DANGER) ================= */}
+            {team.role !== "creator" && (
+                <div className="border-t border-slate-800 pt-6">
+                    <div className="bg-amber-500/10 border border-amber-500/40 rounded-xl p-5 space-y-4">
+
+                        <h3 className="text-amber-400 font-bold flex items-center gap-2 text-lg">
+                            <AlertTriangle size={20} />
+                            Salir del equipo
+                        </h3>
+
+                        <p className="text-sm text-slate-300">
+                            Dejarás de pertenecer a este equipo. Podrás volver a unirte si eres invitado nuevamente.
+                        </p>
+
+                        <div className="space-y-2">
+                            <p className="text-xs text-slate-400">
+                                Escribe <b>{team.name}</b> para confirmar:
+                            </p>
+
+                            <input
+                                value={deleteText}
+                                onChange={(e) => setDeleteText(e.target.value)}
+                                className="w-full bg-slate-900 border border-amber-500/30 p-3 rounded-lg text-sm"
+                                placeholder="Confirmar salida"
+                            />
+                        </div>
+
+                        <div className="flex justify-end">
+                            <button
+                                onClick={handleLeaveTeam}
+                                disabled={deleteText !== team.name}
+                                className="bg-amber-500 hover:bg-amber-600 text-black px-5 py-2 rounded-lg font-semibold disabled:opacity-40"
+                            >
+                                Salir del equipo
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

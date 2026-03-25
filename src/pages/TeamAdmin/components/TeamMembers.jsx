@@ -4,7 +4,10 @@ import { teamService } from "../../Timeline/teamService";
 import RoleBadge from "../../../components/RoleBadge";
 import { roleConfig } from "../../../config/roles";
 
-export default function TeamMembers({ team, userId }) {
+export default function TeamMembers({ team }) {
+
+    const rolesCanDelete = ["creator", "captain", "coach", "manager"];
+
     const [members, setMembers] = useState([]);
     const [requests, setRequests] = useState([]);
     const [searchUser, setSearchUser] = useState("");
@@ -158,7 +161,8 @@ export default function TeamMembers({ team, userId }) {
 
                                 {/* Acciones */}
                                 <div className="self-start">
-                                    {m.role !== "creator" && (
+                                    {/* Solo roles que pueden eliminar y que la tarjeta no sea del creador */}
+                                    {(m.role !== "creator" && rolesCanDelete.includes(team.role)) && (
                                         <button
                                             onClick={() =>
                                                 setConfirmModal({
@@ -168,6 +172,7 @@ export default function TeamMembers({ team, userId }) {
                                             }
                                             className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-400/10 rounded-lg transition-colors"
                                         >
+                                            {team.role}
                                             <Trash2 size={16} />
                                         </button>
                                     )}

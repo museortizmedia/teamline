@@ -24,12 +24,6 @@ export default function TimelinePage({ teamId }) {
     const { user, isAuthenticated } = useAuth();
     const { team } = useTeam();
 
-    // fallback
-    if (teamId == undefined) {
-        if (team != null) { teamId = team.team_id }
-        else { setPage("dashboard"); return null; }
-    }
-
     const [openEditor, setOpenEditor] = useState(false);
 
     const [teamline, setTeamline] = useState(null);
@@ -280,7 +274,10 @@ export default function TimelinePage({ teamId }) {
                             <div
                                 key={moment.id}
                                 className="relative mb-10 grid grid-cols-[40px_1fr] gap-4 cursor-pointer"
-                                onClick={() => setPage("post", { postId: moment.id })}
+                                onClick={() => {
+                                    window.history.pushState({}, "", `/p/${moment.id}`);
+                                    window.dispatchEvent(new PopStateEvent("popstate"));
+                                }}
                             >
 
                                 <div className="z-10 flex flex-col items-center pt-2">

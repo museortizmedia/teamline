@@ -10,6 +10,7 @@ import TeamTimeline from "./components/TeamTimeline";
 
 
 export default function TeamAdminPage() {
+    const rolesCanView = ["creator", "captain", "coach", "manager", "member"];
     const { team, role, loading } = useTeam();
     const [tab, setTab] = useState("members");
     const [deleteTeamModal, setDeleteTeamModal] = useState(false);
@@ -22,7 +23,7 @@ export default function TeamAdminPage() {
         return <div className="flex justify-center p-10 text-slate-400">No se seleccionó ningún equipo</div>;
     }
 
-    if (role !== "creator") {
+    if (!rolesCanView.includes(role)) {
         return (
             <div className="flex flex-col items-center justify-center h-screen gap-4 text-slate-400">
                 <h2 className="text-xl font-bold">Acceso restringido</h2>

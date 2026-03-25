@@ -17,8 +17,8 @@ export function useRouterApp() {
     // 🔍 PATH → PAGE
     // ===============================
     const getPageFromPath = (path) => {
-        if (path.startsWith("/t/")) return "timeline"; // team timeline
-        if (path.startsWith("/p/")) return "post";     // post individual
+        if (path.startsWith("/t/")) return "timeline";
+        if (path.startsWith("/p/")) return "post";
         return routes[path] || "auth";
     };
 
@@ -28,17 +28,9 @@ export function useRouterApp() {
     const getPathFromPage = (page, params = {}) => {
         switch (page) {
             case "timeline":
-                if (!params.teamId) {
-                    console.warn("Timeline requiere teamId");
-                    return "/";
-                }
-                return `/t/${params.teamId}`;
+                return params.teamId ? `/t/${params.teamId}` : "/";
             case "post":
-                if (!params.postId) {
-                    console.warn("Post requiere postId");
-                    return "/";
-                }
-                return `/p/${params.postId}`;
+                return params.postId ? `/p/${params.postId}` : "/";
             case "dashboard":
                 return "/dashboard";
             case "forum":
@@ -57,14 +49,28 @@ export function useRouterApp() {
     // ===============================
     // 📦 STATE
     // ===============================
-    const [page, setPageState] = useState(() => getPageFromPath(window.location.pathname));
-    const [params, setParams] = useState(() => getParamsFromPath(window.location.pathname));
+    const [page, setPageState] = useState(() =>
+        getPageFromPath(window.location.pathname)
+    );
+
+    const [params, setParams] = useState(() =>
+        getParamsFromPath(window.location.pathname)
+    );
 
     // ===============================
-    // 🚀 NAVEGACIÓN
+    // 🚀 NAVEGACIÓN SEGURA
     // ===============================
     const setPage = (nextPage, nextParams = {}) => {
         const path = getPathFromPage(nextPage, nextParams);
+
+        // 🔥 evitar navegación redundante
+        if (
+            nextPage === page &&
+            JSON.stringify(nextParams) === JSON.stringify(params)
+        ) {
+            return;
+        }
+
         window.history.pushState({}, "", path);
         setPageState(nextPage);
         setParams(nextParams);
@@ -77,21 +83,38 @@ export function useRouterApp() {
         const handlePopState = () => {
             const newPage = getPageFromPath(window.location.pathname);
             const newParams = getParamsFromPath(window.location.pathname);
+
             setPageState(newPage);
             setParams(newParams);
         };
+
         window.addEventListener("popstate", handlePopState);
         return () => window.removeEventListener("popstate", handlePopState);
     }, []);
 
     // ===============================
-    // 🔐 GUARD
+    // 🔐 GUARD (CORREGIDO)
     // ===============================
     useEffect(() => {
-        const publicPages = ["auth", "timeline", "post"]; // post es público
-        if (!isAuthenticated && !publicPages.includes(page)) setPage("auth");
-        if (isAuthenticated && page === "auth") setPage("dashboard");
+        const publicPages = ["auth", "timeline", "post"];
+
+        // 🔴 SOLO bloquear páginas privadas
+        if (!isAuthenticated && !publicPages.includes(page)) {
+            if (page !== "auth") {
+                setPage("auth");
+            }
+            return;
+        }
+
+        // 🟢 usuario logueado no debe ver auth
+        if (isAuthenticated && page === "auth") {
+            setPage("dashboard");
+        }
+
     }, [page, isAuthenticated]);
+
+    // ❌ ELIMINADO: ya no forzamos auth global
+    // (esto era lo que rompía /post)
 
     // ===============================
     // 🔎 PARAMS PARSING
@@ -101,10 +124,12 @@ export function useRouterApp() {
             const [, , teamId] = path.split("/");
             return { teamId };
         }
+
         if (path.startsWith("/p/")) {
             const [, , postId] = path.split("/");
             return { postId };
         }
+
         return {};
     }
 

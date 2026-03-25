@@ -35,10 +35,10 @@ export default function App() {
     );
   }
 
-  if (loading)
-    return (
-      <PageLoader />
-    );
+  if (loading) return <PageLoader />;
+
+  // 🔥 KEY CRÍTICA: fuerza remount al cambiar ruta
+  const routeKey = page + JSON.stringify(params || {});
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,13 +46,17 @@ export default function App() {
 
       <main className="pt-20 px-4 flex-1 overflow-y-auto pb-24">
         <Suspense fallback={<PageLoader />}>
-          {isAuthenticated
-            ? renderPrivatePage(page, setPage, params)
-            : renderPublicPage(page, setPage, params)}
+          <div key={routeKey}>
+            {isAuthenticated
+              ? renderPrivatePage(page, setPage, params)
+              : renderPublicPage(page, setPage, params)}
+          </div>
         </Suspense>
       </main>
 
-      {isAuthenticated && <BottomNav page={page} setPage={setPage} isAuth={isAuthenticated} />}
+      {isAuthenticated && (
+        <BottomNav page={page} setPage={setPage} isAuth={isAuthenticated} />
+      )}
     </div>
   );
 }
@@ -69,10 +73,17 @@ function renderPublicPage(page, setPage, params) {
           openNewPost={() => setPage("newpost")}
         />
       );
+
     case "post":
       return <PostPage postId={params.postId} setPage={setPage} />;
+
     default:
-      return <AuthPage defaultMode={params.defaultMode || "login"} setPage={setPage} />;
+      return (
+        <AuthPage
+          defaultMode={params.defaultMode || "login"}
+          setPage={setPage}
+        />
+      );
   }
 }
 
@@ -83,14 +94,28 @@ function renderPrivatePage(page, setPage, params) {
   switch (page) {
     case "timeline":
       return <TimelinePage teamId={params.teamId} setPage={setPage} />;
+
+    case "post":
+      return <PostPage postId={params.postId} setPage={setPage} />;
+
     case "forum":
       return <ForumPage setPage={setPage} />;
+
     case "profile":
       return <ProfilePage setPage={setPage} />;
+
     case "teamAdmin":
       return <TeamAdminPage setPage={setPage} />;
+
     case "newpost":
-      return <CreateMemoryPage isOpen={true} onClose={() => setPage("timeline")} setPage={setPage} />;
+      return (
+        <CreateMemoryPage
+          isOpen={true}
+          onClose={() => setPage("timeline")}
+          setPage={setPage}
+        />
+      );
+
     default:
       return <DashboardPage setPage={setPage} />;
   }

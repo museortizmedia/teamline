@@ -324,7 +324,7 @@ export default function AuthPage({ defaultMode = "login" }) {
 
                     <div className="mt-4 text-center">
                         <p className="text-xs text-slate-500">
-                            Versión 1.0.0-alpha
+                            Versión 1.1.3
                         </p>
                     </div>
 
