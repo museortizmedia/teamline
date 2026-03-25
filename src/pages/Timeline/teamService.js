@@ -19,7 +19,7 @@ export const teamService = {
         active_to
       `);
 
-            console.log("data:", data);
+            //console.log("data:", data);
 
             // Filtrar solo las filas donde user_id coincida
             const userTeams = data.filter(m => m.profiles.user_id === userId);
@@ -395,10 +395,10 @@ export const teamService = {
 
         if (error) throw error;
 
-        console.log(data.map(p => ({
+        /*console.log(data.map(p => ({
             date: p.post_date,
             created: p.created_at
-        })));
+        })));*/
 
         return data.map(p => ({
             id: p.post_id,

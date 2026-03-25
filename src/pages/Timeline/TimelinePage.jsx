@@ -81,6 +81,31 @@ export default function TimelinePage({ teamId }) {
         setOpenComments(prev => ({ ...prev, [postId]: !prev[postId] }));
     };
 
+    const handleShare = async (postId, postTitle) => {
+        // Construimos la URL siguiendo tu lógica de rutas: /p/id
+        const url = `${window.location.origin}/p/${postId}`;
+
+        const shareData = {
+            title: postTitle || "Mira este recuerdo en TeamLine",
+            text: `Echa un vistazo a este momento: ${postTitle}`,
+            url: url,
+        };
+
+        try {
+            // Intentar usar el API nativo (móviles)
+            if (navigator.share && navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+            } else {
+                // Fallback para escritorio: Copiar al portapapeles
+                await navigator.clipboard.writeText(url);
+                // Opcional: podrías usar un toast o notificación aquí
+                alert("¡Enlace copiado al portapapeles!");
+            }
+        } catch (err) {
+            console.error("Error al compartir:", err);
+        }
+    };
+
     // ===============================
     // Load initial data
     // ===============================
@@ -241,7 +266,7 @@ export default function TimelinePage({ teamId }) {
                                         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <img src={moment.avatar || defaultAvatar} className="h-8 w-8 rounded-full flex-shrink-0" />
-                                                <div className="flex flex-col min-w-0">
+                                                <div className="flex flex-col min-w-0 space-y-1">
                                                     <span className="text-xs font-bold truncate">{moment.author}</span>
                                                     <RoleBadge role={moment.role} />
                                                 </div>
@@ -260,7 +285,7 @@ export default function TimelinePage({ teamId }) {
                                                     <span className="text-xs font-medium">{postComments.length}</span>
                                                 </button>
 
-                                                <button onClick={(e) => { e.stopPropagation(); alert("Share not implemented"); }}
+                                                <button onClick={(e) => { e.stopPropagation(); handleShare(moment.id, moment.title); }}
                                                     className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors">
                                                     <Share2 size={16} />
                                                 </button>
@@ -302,7 +327,7 @@ export default function TimelinePage({ teamId }) {
 
             {/* FAB */}
             {isAuthenticated && team?.team_id === teamline?.team_id && (
-                <button className="fixed bottom-20 right-8 h-14 w-14 rounded-full bg-primary flex items-center justify-center shadow-lg"
+                <button className="fixed bottom-20 right-8 h-14 w-14 rounded-full bg-primary flex items-center justify-center z-50 shadow-lg"
                     onClick={() => setOpenEditor(true)}>
                     <Plus size={26} />
                 </button>
