@@ -4,7 +4,7 @@ import { useAuth } from "../pages/Auth/AuthContext";
 
 export default function BottomNav({ current, setPage }) {
 
-    const { role } = useTeam();
+    const { role, team } = useTeam();
     const { user } = useAuth();
 
     const Item = ({ icon, label, page }) => (
@@ -29,11 +29,14 @@ export default function BottomNav({ current, setPage }) {
                     page="dashboard"
                 />
 
-                <Item
-                    icon={<Users size={22} />}
-                    label="TimeLine"
-                    page="timeline"
-                />
+                <button
+                    onClick={() => window.location.href = `/t/${team?.team_id}`}
+                    className={`flex flex-col items-center text-xs gap-1 ${current === "timeline" ? "text-primary" : "text-slate-500"
+                        }`}
+                >
+                    <Users size={22} />
+                    TimeLine
+                </button>
 
                 {user && (
                     <Item
