@@ -3,6 +3,7 @@ import { Trash2, Check, X, Search } from "lucide-react";
 import { teamService } from "../../Timeline/teamService";
 import RoleBadge from "../../../components/RoleBadge";
 import { roleConfig } from "../../../config/roles";
+import defaultAvatar from "../../../assets/default-avatar.webp";
 
 export default function TeamMembers({ team }) {
 
@@ -124,7 +125,7 @@ export default function TeamMembers({ team }) {
                                 {/* Foto con anillo de color según rol */}
                                 <div className="flex-shrink-0">
                                     <img
-                                        src={m.profile_pic}
+                                        src={m.profile_pic || defaultAvatar}
                                         alt={m.username}
                                         className={`h-20 w-20 rounded-full object-cover border-2 ${role.border}`}
                                     />
@@ -172,7 +173,6 @@ export default function TeamMembers({ team }) {
                                             }
                                             className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-400/10 rounded-lg transition-colors"
                                         >
-                                            {team.role}
                                             <Trash2 size={16} />
                                         </button>
                                     )}

@@ -3,6 +3,7 @@ import { teamService } from "../../Timeline/teamService";
 import { roleConfig } from "../../../config/roles";
 import RoleBadge from "../../../components/RoleBadge";
 import { Check, Pen, Search, X } from "lucide-react";
+import defaultAvatar from "../../../assets/default-avatar.webp";
 
 export default function TeamRoles({ team }) {
 
@@ -122,7 +123,7 @@ export default function TeamRoles({ team }) {
                         >
 
                             <img
-                                src={m.profile_pic}
+                                src={m.profile_pic || defaultAvatar}
                                 alt={m.username}
                                 className={`h-20 w-20 rounded-full object-cover border-2 ${role.border}`}
                             />

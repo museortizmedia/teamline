@@ -40,10 +40,25 @@ export default function AuthPage({ defaultMode = "login" }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (mode === "register" && password !== confirmPassword) {
-            setMessage("Las contraseñas no coinciden");
-            setMessageType("error");
-            return;
+        if (mode === "register") {
+            if (password !== confirmPassword) {
+                setMessage("Las contraseñas no coinciden");
+                setMessageType("error");
+                return;
+            }
+
+            if (username.length < 3) {
+                setMessage("El nombre de usuario debe tener al menos 3 caracteres");
+                setMessageType("error");
+                return;
+            }
+
+            const usernameRegex = /^[a-zA-Z0-9._]+$/;
+            if (!usernameRegex.test(username)) {
+                setMessage("El username solo puede contener letras, números, '.' y '_', sin espacios");
+                setMessageType("error");
+                return;
+            }
         }
 
         try {
@@ -158,7 +173,16 @@ export default function AuthPage({ defaultMode = "login" }) {
                                             type="text"
                                             placeholder="username"
                                             value={username}
-                                            onChange={(e) => setUsername(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+
+                                                // Solo permite letras, números, _ y .
+                                                const sanitized = value.replace(/[^a-zA-Z0-9._]/g, "");
+
+                                                setUsername(sanitized);
+                                            }}
+                                            pattern="^[a-zA-Z0-9._]+$"
+                                            title="Solo letras, números, punto (.) y guion bajo (_), sin espacios"
                                             className="bg-transparent outline-none text-sm flex-1"
                                             required
                                         />
