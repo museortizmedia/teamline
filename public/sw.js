@@ -8,9 +8,22 @@ self.addEventListener("activate", (event) => {
 
 // Estrategia: NETWORK FIRST (todo online)
 self.addEventListener("fetch", (event) => {
+    const request = event.request;
+
+    if (request.destination === "image") {
+        event.respondWith(
+            fetch(request, { cache: "no-store" }).catch(() => {
+                return new Response("Offline", {
+                    status: 503,
+                    statusText: "Offline"
+                });
+            })
+        );
+        return;
+    }
+
     event.respondWith(
-        fetch(event.request).catch(() => {
-            // fallback básico si falla red
+        fetch(request).catch(() => {
             return new Response("Offline", {
                 status: 503,
                 statusText: "Offline"
