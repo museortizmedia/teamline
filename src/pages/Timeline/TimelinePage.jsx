@@ -215,7 +215,7 @@ export default function TimelinePage({ teamId }) {
                         const isOpen = openComments[moment.id];
 
                         return (
-                            <div key={moment.id} className="relative mb-10 grid grid-cols-[40px_1fr] gap-4 cursor-pointer">
+                            <div key={moment.id} className="relative mb-10 grid grid-cols-[40px_1fr] gap-4 cursor-pointer" onClick={() => window.open(`/p/${moment.id}`, "_blank")}>
 
                                 <div className="z-10 flex flex-col items-center pt-2">
                                     <div className={`flex h-10 w-10 items-center justify-center rounded-full ${moment.accent}`}>
