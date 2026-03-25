@@ -280,7 +280,7 @@ export default function TimelinePage({ teamId }) {
                                                 </button>
 
                                                 <button onClick={(e) => { e.stopPropagation(); toggleComments(moment.id); }}
-                                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors">
+                                                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-slate-800 ${isOpen ? "text-primary" : "text-slate-400 hover:text-slate-200"} transition-colors`}>
                                                     <MessageCircle size={16} />
                                                     <span className="text-xs font-medium">{postComments.length}</span>
                                                 </button>
@@ -293,25 +293,47 @@ export default function TimelinePage({ teamId }) {
                                         </div>
 
                                         {isOpen && (
-                                            <div className="mt-2 border-t border-slate-800 p-4 flex flex-col gap-3 bg-slate-900/50"
-                                                onClick={(e) => e.stopPropagation()}>
-                                                <div className="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                                            <div
+                                                className="mt-2 border-t border-slate-800 p-4 flex flex-col gap-3 bg-slate-900/50 overflow-hidden"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+
+                                                {/* LISTA DE COMENTARIOS */}
+                                                <div className="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar min-w-0">
                                                     {postComments.map(c => (
-                                                        <div key={c.id} className="text-sm text-slate-300 break-words">
-                                                            <b className="text-primary-light">{c.creator.name}:</b> {c.text}
+                                                        <div
+                                                            key={c.id}
+                                                            className="text-sm text-slate-300 break-all leading-relaxed"
+                                                        >
+                                                            <b className="text-primary-light">{c.creator.name}:</b>{" "}
+                                                            <span className="break-all">{c.text}</span>
                                                         </div>
                                                     ))}
                                                 </div>
-                                                <div className="flex gap-2 items-center">
-                                                    <input value={commentInput[moment.id] || ""}
-                                                        onChange={(e) => setCommentInput(prev => ({ ...prev, [moment.id]: e.target.value }))}
+
+                                                {/* INPUT + BOTÓN */}
+                                                <div className="flex gap-2 items-center min-w-0">
+
+                                                    <input
+                                                        value={commentInput[moment.id] || ""}
+                                                        onChange={(e) =>
+                                                            setCommentInput(prev => ({
+                                                                ...prev,
+                                                                [moment.id]: e.target.value
+                                                            }))
+                                                        }
                                                         placeholder="Comentar..."
-                                                        className="flex-1 min-w-0 bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-primary transition-all" />
-                                                    <button onClick={() => handleAddComment(moment.id)}
+                                                        className="flex-1 w-0 min-w-0 bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-primary transition-all"
+                                                    />
+
+                                                    <button
+                                                        onClick={() => handleAddComment(moment.id)}
                                                         disabled={!isAuthenticated || !commentInput[moment.id]}
-                                                        className="bg-primary hover:bg-primary-dark disabled:opacity-50 p-2 rounded-lg text-sm transition-colors flex-shrink-0">
+                                                        className="bg-primary hover:bg-primary-dark disabled:opacity-50 p-2 rounded-lg text-sm transition-colors flex-shrink-0"
+                                                    >
                                                         <Send size={18} />
                                                     </button>
+
                                                 </div>
                                             </div>
                                         )}
