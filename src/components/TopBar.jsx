@@ -54,7 +54,7 @@ export default function TopBar({ setPage }) {
     return (
         <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 backdrop-blur-md bg-[#101622]/80 border-b border-slate-800 text-white">
 
-            <div className="max-w-7xl mx-auto w-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
+            <div className="max-w-8xl mx-auto w-full grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
                 {/* LEFT */}
                 <div className="flex justify-start min-w-0">
 
@@ -118,7 +118,7 @@ export default function TopBar({ setPage }) {
                             )}
 
                             {teamMenuOpen && (
-                                <div className="absolute top-12 left-0 w-60 bg-slate-900 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                                <div className="absolute top-16 left-0 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
 
                                     {teams?.map(t => (
                                         <button

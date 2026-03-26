@@ -71,7 +71,7 @@ export default function TeamTimeline({ team }) {
         <div className="space-y-4">
 
             {/* ---------- FILTERS ---------- */}
-            <div className="fixed top-[4.9rem] left-[33.3333%] md:left-[16.6667%] right-0 z-[100] bg-[#101622]/80 backdrop-blur-md border-b border-slate-800 p-4 flex flex-col sm:flex-row gap-2">
+            <div className="fixed top-[4.9rem] left-[33.3333%] md:left-[16.6667%] right-0 z-10 bg-[#101622]/80 backdrop-blur-md border-b border-slate-800 p-4 flex flex-col sm:flex-row gap-2">
 
                 {/* Search */}
                 <div className="relative flex-1">
