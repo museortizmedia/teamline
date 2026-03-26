@@ -10,7 +10,14 @@ export default function TeamMembers({ team }) {
     const rolesCanDelete = ["creator", "captain", "coach", "manager"];
 
     const [members, setMembers] = useState([]);
-    const [requests, setRequests] = useState([]);
+    const [requests, setRequests] = useState([{
+        user_id: 1,
+        username: "juanperez"
+    },
+    {
+        user_id: 2,
+        username: "maria_dev"
+    }]);
     const [searchUser, setSearchUser] = useState("");
     const [filterQuery, setFilterQuery] = useState(""); // Nuevo estado para buscar en la lista local
     const [availableUsers, setAvailableUsers] = useState([]);
@@ -21,8 +28,8 @@ export default function TeamMembers({ team }) {
             const teamMembers = await teamService.getTeamMembers(team.team_id);
             setMembers(teamMembers);
 
-            const teamRequests = await teamService.getJoinRequests(team.team_id);
-            setRequests(teamRequests);
+            //const teamRequests = await teamService.getJoinRequests(team.team_id);
+            //setRequests(teamRequests);
         }
         loadMembers();
     }, [team]);
@@ -73,30 +80,10 @@ export default function TeamMembers({ team }) {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-xl font-bold font-display">Miembros</h2>
 
-            {/* Join Requests */}
-            {requests.length > 0 && (
-                <div className="space-y-3">
-                    <h3 className="text-sm uppercase text-slate-400 font-semibold tracking-wider">Solicitudes</h3>
-                    {requests.map(r => (
-                        <div key={r.user_id} className="flex justify-between items-center bg-slate-800/50 border border-slate-700 rounded-xl p-3">
-                            <span className="text-slate-200 font-medium">{r.username}</span>
-                            <div className="flex gap-2">
-                                <button onClick={() => approveRequest(r.user_id)} className="text-green-400 hover:bg-green-400/10 p-2 rounded-lg transition-colors">
-                                    <Check size={18} />
-                                </button>
-                                <button onClick={() => rejectRequest(r.user_id)} className="text-red-400 hover:bg-red-400/10 p-2 rounded-lg transition-colors">
-                                    <X size={18} />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* Member List Section */}
-            <div className="space-y-4">
+            {/* Head */}
+            <section className="fixed top-[4.9rem] left-[33.3333%] md:left-[16.6667%] right-0 z-[100] px-6 py-2 bg-[#101622]/80 backdrop-blur-md border-b border-slate-800 ">
+                <h2 className="text-xl font-bold font-display">Miembros</h2>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 className="text-sm uppercase text-slate-400 font-semibold tracking-wider">Listado de miembros</h3>
 
@@ -112,86 +99,86 @@ export default function TeamMembers({ team }) {
                         />
                     </div>
                 </div>
+            </section>
 
-                <div className="space-y-3">
-                    {filteredMembers.map((m) => {
-                        const role = roleConfig[m.role] || roleConfig.member; // fallback por si el rol no existe
+            <div className="space-y-3 pt-10">
+                {filteredMembers.map((m) => {
+                    const role = roleConfig[m.role] || roleConfig.member; // fallback por si el rol no existe
 
-                        return (
-                            <div
-                                key={m.user_id}
-                                className={`bg-slate-800/40 border ${role.border} hover:border-slate-600 transition-all rounded-xl p-4 flex items-center gap-4`}
-                            >
-                                {/* Foto con anillo de color según rol */}
-                                <div className="flex-shrink-0">
-                                    <img
-                                        src={m.profile_pic || defaultAvatar}
-                                        alt={m.username}
-                                        className={`h-20 w-20 rounded-full object-cover border-2 ${role.border}`}
-                                    />
-                                </div>
+                    return (
+                        <div
+                            key={m.user_id}
+                            className={`bg-slate-800/40 border ${role.border} hover:border-slate-600 transition-all rounded-xl p-4 flex items-center gap-4`}
+                        >
+                            {/* Foto con anillo de color según rol */}
+                            <div className="flex-shrink-0">
+                                <img
+                                    src={m.profile_pic || defaultAvatar}
+                                    alt={m.username}
+                                    className={`h-20 w-20 rounded-full object-cover border-2 ${role.border}`}
+                                />
+                            </div>
 
-                                {/* Info principal */}
-                                <div className="flex-1 flex flex-col gap-1">
-                                    {/* Nombre y username */}
-                                    <div className="flex flex-col">
-                                        <span className="text-base font-bold text-slate-50">
-                                            {m.display_name || `@${m.username}`}
-                                        </span>
-                                        {m.display_name && (
-                                            <span className="text-xs text-slate-400">@{m.username}</span>
-                                        )}
-                                    </div>
-
-                                    {/* Rol con badge */}
-                                    <RoleBadge role={m.role} />
-
-                                    {/* Fechas activas */}
-                                    <div className="mt-2 flex gap-3 text-[10px] uppercase tracking-wider font-semibold">
-                                        <div className="text-slate-500">
-                                            Desde: <span className="text-slate-300">{m.active_from}</span>
-                                        </div>
-                                        <div className="text-slate-500">
-                                            Hasta:{" "}
-                                            <span className={m.active_to ? "text-slate-300" : "text-emerald-400"}>
-                                                {m.active_to ? m.active_to : "Actualidad"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Acciones */}
-                                <div className="self-start">
-                                    {/* Solo roles que pueden eliminar y que la tarjeta no sea del creador */}
-                                    {(m.role !== "creator" && rolesCanDelete.includes(team.role)) && (
-                                        <button
-                                            onClick={() =>
-                                                setConfirmModal({
-                                                    title: `Remove Member ${m.username}?`,
-                                                    action: () => removeMember(m.user_id),
-                                                })
-                                            }
-                                            className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-400/10 rounded-lg transition-colors"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                            {/* Info principal */}
+                            <div className="flex-1 flex flex-col gap-1">
+                                {/* Nombre y username */}
+                                <div className="flex flex-col">
+                                    <span className="text-base font-bold text-slate-50">
+                                        {m.display_name || `@${m.username}`}
+                                    </span>
+                                    {m.display_name && (
+                                        <span className="text-xs text-slate-400">@{m.username}</span>
                                     )}
                                 </div>
-                            </div>
-                        );
-                    })}
 
-                    {filteredMembers.length === 0 && (
-                        <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl">
-                            <p className="text-slate-500 text-sm">No members found matching your search.</p>
+                                {/* Rol con badge */}
+                                <RoleBadge role={m.role} />
+
+                                {/* Fechas activas */}
+                                <div className="mt-2 flex gap-3 text-[10px] uppercase tracking-wider font-semibold">
+                                    <div className="text-slate-500">
+                                        Desde: <span className="text-slate-300">{m.active_from}</span>
+                                    </div>
+                                    <div className="text-slate-500">
+                                        Hasta:{" "}
+                                        <span className={m.active_to ? "text-slate-300" : "text-emerald-400"}>
+                                            {m.active_to ? m.active_to : "Actualidad"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Acciones */}
+                            <div className="self-start">
+                                {/* Solo roles que pueden eliminar y que la tarjeta no sea del creador */}
+                                {(m.role !== "creator" && rolesCanDelete.includes(team.role)) && (
+                                    <button
+                                        onClick={() =>
+                                            setConfirmModal({
+                                                title: `Remove Member ${m.username}?`,
+                                                action: () => removeMember(m.user_id),
+                                            })
+                                        }
+                                        className="text-slate-500 hover:text-red-400 p-2 hover:bg-red-400/10 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    )}
-                </div>
+                    );
+                })}
+
+                {filteredMembers.length === 0 && (
+                    <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl">
+                        <p className="text-slate-500 text-sm">No members found matching your search.</p>
+                    </div>
+                )}
             </div>
 
-            {/* Invite Member */}
+            {/* Invite Member 
             <div className="space-y-2 pt-4 border-t border-slate-800">
-                <label className="text-xs uppercase text-slate-400 font-semibold tracking-wider">Invite Member</label>
+                <label className="text-xs uppercase text-slate-400 font-semibold tracking-wider">Invitar miembros</label>
                 <div className="flex flex-col gap-2">
                     <div className="relative">
                         <input
@@ -220,7 +207,27 @@ export default function TeamMembers({ team }) {
                         </ul>
                     )}
                 </div>
-            </div>
+            </div> */}
+
+            {/* SOLICITUDES 
+                {requests.length > 0 && (
+                    <div className="space-y-3">
+                        <h3 className="text-sm uppercase text-slate-400 font-semibold tracking-wider">Solicitudes</h3>
+                        {requests.map(r => (
+                            <div key={r.user_id} className="flex justify-between items-center bg-slate-800/50 border border-slate-700 rounded-xl p-3">
+                                <span className="text-slate-200 font-medium">{r.username}</span>
+                                <div className="flex gap-2">
+                                    <button onClick={() => approveRequest(r.user_id)} className="text-green-400 hover:bg-green-400/10 p-2 rounded-lg transition-colors">
+                                        <Check size={18} />
+                                    </button>
+                                    <button onClick={() => rejectRequest(r.user_id)} className="text-red-400 hover:bg-red-400/10 p-2 rounded-lg transition-colors">
+                                        <X size={18} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )} */}
 
             {/* Confirm Modal */}
             {confirmModal && (

@@ -104,7 +104,7 @@ export default function TeamTimeline({ team }) {
             </div>
 
             {/* ---------- LIST ---------- */}
-            <section className="pt-10">
+            <section className="space-y-3 pt-10">
                 {filteredTimeline.map(post => {
                     const canDelete = ALLOWED_DELETE_ROLES.includes(team.role);
                     const isFoundationPost = team.foundation_date === post.date;

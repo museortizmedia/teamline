@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function MemoryCalendar({
     date,
@@ -10,16 +10,12 @@ export default function MemoryCalendar({
 }) {
     const [showPicker, setShowPicker] = useState(false);
 
-    // ===============================
-    // 🔹 HELPERS DE FECHA
-    // ===============================
     const createLocalDate = (year, month, day) => new Date(year, month, day, 0, 0, 0, 0);
 
     const formatToLocalISO = (year, month, day) => {
-        const d = createLocalDate(year, month, day);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, "0");
-        const dd = String(d.getDate()).padStart(2, "0");
+        const yyyy = year;
+        const mm = String(month + 1).padStart(2, "0");
+        const dd = String(day).padStart(2, "0");
         return `${yyyy}-${mm}-${dd}`;
     };
 
@@ -34,7 +30,7 @@ export default function MemoryCalendar({
 
     const getDaysHeader = () => {
         const days = [];
-        const baseDate = new Date(2024, 0, 7); // domingo
+        const baseDate = new Date(2024, 0, 7);
         for (let i = 0; i < 7; i++) {
             const d = new Date(baseDate);
             d.setDate(baseDate.getDate() + i);
@@ -54,14 +50,30 @@ export default function MemoryCalendar({
 
     const isDateDisabled = (date) => (min && date < min) || (max && date > max);
 
-    // ===============================
-    // 🔹 ESTADO DEL CALENDARIO
-    // ===============================
-    const initialDate = date ? parseDateString(date) : new Date();
-    const [currentMonth, setCurrentMonth] = useState(
-        createLocalDate(initialDate.getFullYear(), initialDate.getMonth(), 1)
-    );
     const selectedDate = date ? parseDateString(date) : null;
+
+    const [currentMonth, setCurrentMonth] = useState(
+        selectedDate
+            ? createLocalDate(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+            : createLocalDate(new Date().getFullYear(), new Date().getMonth(), 1)
+    );
+
+    useEffect(() => {
+        if (!selectedDate) return;
+
+        const newMonth = createLocalDate(
+            selectedDate.getFullYear(),
+            selectedDate.getMonth(),
+            1
+        );
+
+        if (
+            currentMonth.getFullYear() !== newMonth.getFullYear() ||
+            currentMonth.getMonth() !== newMonth.getMonth()
+        ) {
+            setCurrentMonth(newMonth);
+        }
+    }, [date]);
 
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
@@ -73,13 +85,9 @@ export default function MemoryCalendar({
     const canGoPrev = !min || createLocalDate(year, month - 1, 1) >= createLocalDate(min.getFullYear(), min.getMonth(), 1);
     const canGoNext = !max || createLocalDate(year, month + 1, 1) <= createLocalDate(max.getFullYear(), max.getMonth(), 1);
 
-    // ===============================
-    // 🔹 RENDER
-    // ===============================
     return (
-        <div className="bg-[#101622] border border-slate-700 rounded-xl p-4">
+        <div className="bg-[#101622] border border-slate-700 rounded-xl p-3">
 
-            {/* HEADER */}
             <div className="flex justify-between items-center mb-3 relative">
                 <button
                     disabled={!canGoPrev}
@@ -104,7 +112,6 @@ export default function MemoryCalendar({
                     <ChevronRight size={18} className="text-slate-400" />
                 </button>
 
-                {/* PICKER */}
                 {showPicker && (
                     <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-[#020617] border border-slate-700 rounded-xl p-3 flex gap-2 z-50 shadow-xl">
                         <select
@@ -133,52 +140,50 @@ export default function MemoryCalendar({
                 )}
             </div>
 
-            {/* DAYS HEADER */}
             <div className="grid grid-cols-7 text-xs text-slate-500 mb-1">
                 {getDaysHeader().map((d, i) => (
                     <span key={i} className="text-center font-medium">{d}</span>
                 ))}
             </div>
 
-            {/* GRID */}
             <div className="grid grid-cols-7 gap-y-1 text-sm justify-items-center">
-                {Array.from({ length: firstDay }).map((_, i) => <div key={"empty-" + i} className="h-8 w-8" />)}
+                {Array.from({ length: 42 }).map((_, index) => {
+                    const dayNumber = index - firstDay + 1;
+                    const current = createLocalDate(year, month, dayNumber);
 
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                    const day = i + 1;
-                    const current = createLocalDate(year, month, day);
-                    const isSelected = selectedDate && isSameDay(current, selectedDate);
-                    const isDisabled = isDateDisabled(current);
+                    const isCurrentMonth = dayNumber > 0 && dayNumber <= daysInMonth;
+                    const isSelected = isCurrentMonth && selectedDate && isSameDay(current, selectedDate);
+                    const isDisabled = !isCurrentMonth || isDateDisabled(current);
 
                     return (
                         <button
-                            key={day}
+                            key={index}
                             disabled={isDisabled}
                             onClick={() => {
-                                if (isDisabled) return;
-                                setDate(formatToLocalISO(year, month, day));
+                                if (!isCurrentMonth || isDisabled) return;
+                                setDate(formatToLocalISO(year, month, dayNumber));
                                 setShowPicker(false);
                             }}
                             className={`
-                h-8 w-8 flex items-center justify-center rounded-full transition
-                ${isDisabled
-                                    ? "text-slate-600 opacity-40 cursor-not-allowed"
-                                    : isSelected
-                                        ? "bg-primary text-white font-bold"
-                                        : "hover:bg-slate-700 text-slate-300"
+                                h-8 w-8 flex items-center justify-center rounded-full transition
+                                ${!isCurrentMonth
+                                    ? "opacity-0 pointer-events-none"
+                                    : isDisabled
+                                        ? "text-slate-600 opacity-40 cursor-not-allowed"
+                                        : isSelected
+                                            ? "bg-primary text-white font-bold"
+                                            : "hover:bg-slate-700 text-slate-300"
                                 }
-              `}
+                            `}
                         >
-                            {day}
+                            {isCurrentMonth ? dayNumber : ""}
                         </button>
                     );
                 })}
             </div>
 
-            {/* FEEDBACK */}
             <div className="mt-4 flex flex-col items-center gap-2">
 
-                {/* 1️⃣ Fecha seleccionada */}
                 <span className="text-sm font-semibold text-white">
                     {selectedDate?.toLocaleDateString(locale, {
                         month: "short",
@@ -187,7 +192,6 @@ export default function MemoryCalendar({
                     })}
                 </span>
 
-                {/* 2️⃣ Límites mínimo y máximo */}
                 {(minDate || maxDate) && (
                     <div className="flex justify-between w-full px-4 text-[10px] text-slate-400">
                         {minDate && (
@@ -217,7 +221,6 @@ export default function MemoryCalendar({
                     </div>
                 )}
 
-                {/* 3️⃣ Nota informativa */}
                 <span className="text-[10px] text-slate-500 text-center px-4">
                     {locale.startsWith("es")
                         ? "Sólo puedes publicar en tus fechas activas como miembro."

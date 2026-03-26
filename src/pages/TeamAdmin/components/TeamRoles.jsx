@@ -95,12 +95,13 @@ export default function TeamRoles({ team }) {
 
     return (
         <div className="space-y-6">
-            <section className="fixed top-[4.9rem] left-[33.3333%] md:left-[16.6667%] right-0 z-[100] px-6 bg-[#101622]/80 backdrop-blur-md border-b border-slate-800 ">
+            <section className="fixed top-[4.9rem] left-[33.3333%] md:left-[16.6667%] right-0 z-[100] px-6 py-2 bg-[#101622]/80 backdrop-blur-md border-b border-slate-800 ">
+                <h2 className="text-xl font-bold font-display">Editor de Miembros</h2>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <h2 className="text-xl font-bold font-display">Gestión de roles</h2>
+                    <h3 className="text-sm uppercase text-slate-400 font-semibold tracking-wider">Listado de miembros</h3>
 
-                    {/* Búsqueda */}
-                    <div className="mt-2 relative w-full sm:w-64 mb-3">
+                    {/* BUSCADOR DE MIEMBROS */}
+                    <div className="relative group">
                         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                         <input
                             type="text"
@@ -114,7 +115,7 @@ export default function TeamRoles({ team }) {
             </section>
 
             {/* Lista */}
-            <div className="pt-5 space-y-3">
+            <div className="space-y-3 pt-10">
                 {filteredMembers.map((m) => {
                     const role = roleConfig[m.role] || roleConfig.member;
                     const isEditing = editingDates[m.user_id];

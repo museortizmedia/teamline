@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 
 import { teamService } from "../Timeline/teamService";
 import { useAuth } from "../Auth/AuthContext";
@@ -7,7 +8,7 @@ import MediaGallery from "./MediaGallery";
 import MemoryCalendar from "./MemoryCalendar";
 import MemoryDetails from "./MemoryDetails";
 //import VisibilitySelector from "./VisibilitySelector";
-import { useState } from "react";
+
 
 export default function CreateMemoryPage({ isOpen, onClose }) {
 
@@ -20,6 +21,8 @@ export default function CreateMemoryPage({ isOpen, onClose }) {
     const [content, setContent] = useState("");
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
     const [files, setFiles] = useState([]);
+
+    const [dateTouched, setDateTouched] = useState(false);
 
     const handlePost = async () => {
         if (!team || !user) return;
@@ -56,12 +59,19 @@ export default function CreateMemoryPage({ isOpen, onClose }) {
                 <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
                     {/* LEFT: MEDIA */}
-                    <MediaGallery files={files} setFiles={setFiles} />
+                    <MediaGallery
+                        files={files}
+                        setFiles={setFiles}
+                        minDate={team.foundation_date < activeFrom ? team.foundation_date : activeFrom}
+                        maxDate={activeTo}
+                        setDate={setDate}
+                        setDateTouched={setDateTouched}
+                    />
 
                     {/* RIGHT: DETAILS */}
                     <div className="w-full lg:w-96 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col gap-6 p-6 overflow-y-auto bg-[#0B1220]">
 
-                        <MemoryCalendar date={date} setDate={setDate} minDate={team.foundation_date < activeFrom ? team.foundation_date : activeFrom} maxDate={activeTo} />
+                        <MemoryCalendar date={date} setDate={(newDate) => { setDate(newDate); setDateTouched(true); }} minDate={team.foundation_date < activeFrom ? team.foundation_date : activeFrom} maxDate={activeTo} />
 
                         <MemoryDetails
                             title={title}
