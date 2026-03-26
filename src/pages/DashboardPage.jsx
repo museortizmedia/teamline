@@ -288,14 +288,14 @@ export default function Dashboard({ setPage }) {
 
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => { setPage("teamAdmin"); selectTeam(team) }}
+                                            onClick={() => { selectTeam(team); setPage("teamAdmin"); }}
                                             className="flex items-center gap-1 rounded-lg px-4 py-2 bg-primary text-white text-xs font-bold">
                                             <span>Ajustes</span>
                                             <ArrowRight size={16} />
                                         </button>
 
                                         <button
-                                            onClick={() => { setPage("timeline", { teamId: team.team_id }); }}
+                                            onClick={() => { selectTeam(team); setPage("timeline", { teamId: team.team_id }); }}
                                             className="flex items-center gap-1 rounded-lg px-4 py-2 bg-primary text-white text-xs font-bold">
                                             <span>Timeline</span>
                                             <ArrowRight size={16} />
