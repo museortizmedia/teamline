@@ -118,7 +118,7 @@ export default function TopBar({ setPage }) {
                             )}
 
                             {teamMenuOpen && (
-                                <div className="absolute top-16 left-0 w-full bg-slate-900 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
+                                <div className="absolute left-0 top-16 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-xl overflow-hidden">
 
                                     {teams?.map(t => (
                                         <button
@@ -217,11 +217,11 @@ export default function TopBar({ setPage }) {
                         <div className="flex items-center gap-3 relative" ref={menuRef}>
 
                             {/* TEXTO → solo desktop */}
-                            <span className="flex text-sm flex-col items-end">
-                                <span className="text-white font-semibold">
+                            <span className="hidden sm:flex flex-col items-end text-sm max-w-[200px] min-w-0">
+                                <span title={profile?.display_name} className="text-white font-semibold truncate w-full text-right">
                                     {profile?.display_name || ""}
                                 </span>
-                                <span className="text-slate-400">
+                                <span title={profile?.username} className="text-slate-400 truncate w-full text-right">
                                     @{profile?.username || ""}
                                 </span>
                             </span>
@@ -305,6 +305,6 @@ export default function TopBar({ setPage }) {
 
                 </div>
             </div>
-        </header>
+        </header >
     );
 }
