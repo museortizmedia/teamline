@@ -183,7 +183,7 @@ export const teamService = {
             }
 
             // 3️⃣ Subir archivos y registrar media
-            const mediaPromises = files.map(async (file, index) => {
+            const mediaPromises = files.map(async ({ file }, index) => {
 
                 const filePath = `${post.post_id}/${Date.now()}_${file.name}`;
 
@@ -191,7 +191,10 @@ export const teamService = {
                 const { error: uploadError } = await supabaseService.storage.upload(
                     "post-media",
                     filePath,
-                    file
+                    file,
+                    {
+                        contentType: file.type
+                    }
                 );
 
                 if (uploadError) throw uploadError;

@@ -23,9 +23,17 @@ export default function CreateMemoryPage({ isOpen, onClose }) {
     const [files, setFiles] = useState([]);
 
     const [dateTouched, setDateTouched] = useState(false);
+    const [isPosting, setIsPosting] = useState(false);
+
+    const isValid =
+        title.trim() !== "" &&
+        content.trim() !== "" &&
+        dateTouched;
 
     const handlePost = async () => {
-        if (!team || !user) return;
+        if (!team || !user || isPosting || !isValid) return;
+
+        setIsPosting(true);
 
         try {
             await teamService.postMemory({
@@ -41,6 +49,8 @@ export default function CreateMemoryPage({ isOpen, onClose }) {
 
         } catch (error) {
             console.error("Error posting memory:", error);
+        } finally {
+            setIsPosting(false);
         }
     };
 
@@ -54,7 +64,7 @@ export default function CreateMemoryPage({ isOpen, onClose }) {
                 onClick={(e) => e.stopPropagation()}
             >
 
-                <MemoryEditorHeader onClose={onClose} onPost={handlePost} />
+                <MemoryEditorHeader onClose={onClose} onPost={handlePost} isPosting={isPosting} isValid={isValid} />
 
                 <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 

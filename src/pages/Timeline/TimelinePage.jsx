@@ -231,39 +231,53 @@ export default function TimelinePage({ teamId }) {
                                         <div className="h-px flex-1 bg-slate-700" />
                                     </div>
 
-                                    <div className="overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-800 p-4" >
+                                    <div className="overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-800" >
 
-                                        <h3 className="font-bold text-lg" onClick={() => window.open(`/p/${moment.id}`, "_blank")}>{moment.title}</h3>
-                                        <p className="mt-1 text-sm text-slate-400">{moment.text}</p>
+                                        {/* MEDIA HERO (solo si hay 1 imagen) */}
+                                        {moment.media?.length === 1 && (
+                                            <ImageWithSkeleton
+                                                src={moment.media[0].low_quality_url || moment.media[0].url}
+                                                alt={moment.title || "Media"}
+                                                className="w-full h-[400px] object-cover cursor-pointer"
+                                                onClick={(e) => { e.stopPropagation(); openImageModal(moment.media, 0); }}
+                                            />
+                                        )}
+                                        <div className="p-4">
+                                            <h3 className="font-bold text-lg" onClick={() => window.open(`/p/${moment.id}`, "_blank")}>{moment.title}</h3>
+                                            <p className="mt-1 text-sm text-slate-400">{moment.text}</p>
+                                        </div>
 
-                                        {/* MEDIA HERO / GRID */}
-                                        {moment.media?.length > 0 && (
-                                            <div className="mt-3">
-                                                {moment.media.length === 1 ? (
-                                                    <ImageWithSkeleton
-                                                        src={moment.media[0].low_quality_url || moment.media[0].url}
-                                                        alt={moment.title || "Media"}
-                                                        className="w-full h-64 rounded-2xl cursor-pointer"
-                                                        onClick={(e) => { e.stopPropagation(); openImageModal(moment.media, 0); }}
-                                                    />
-                                                ) : (
-                                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                                        {moment.media.map((m, i) => (
+                                        {/* MEDIA HERO / MASONRY */}
+                                        {moment.media?.length > 1 && (
+                                            <div className="relative mt-3 px-4 max-h-[400px] overflow-hidden">
+
+                                                <div className="columns-2 md:columns-3 gap-2 space-y-2">
+                                                    {moment.media.map((m, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="break-inside-avoid cursor-pointer"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                openImageModal(moment.media, i);
+                                                            }}
+                                                        >
                                                             <ImageWithSkeleton
-                                                                key={i}
                                                                 src={m.low_quality_url || m.url}
                                                                 alt={moment.title || "Media"}
-                                                                className="h-32 w-full rounded-lg cursor-pointer"
-                                                                onClick={(e) => { e.stopPropagation(); openImageModal(moment.media, i); }}
+                                                                className="w-full rounded-lg mb-2 transition-transform hover:scale-[1.02]"
                                                             />
-                                                        ))}
-                                                    </div>
-                                                )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Fade inferior */}
+                                                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+
                                             </div>
                                         )}
 
                                         {/* BOTONES */}
-                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <img src={moment.avatar || defaultAvatar} className="h-8 w-8 rounded-full flex-shrink-0" />
                                                 <div className="flex flex-col min-w-0 space-y-1">
