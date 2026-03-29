@@ -33,6 +33,12 @@ export default function TimelinePage({ teamId }) {
     const [modalImages, setModalImages] = useState([]);
     const [modalIndex, setModalIndex] = useState(0);
 
+    const parseLocalDate = (dateString) => {
+        if (!dateString) return null;
+        const [y, m, d] = dateString.split("-").map(Number);
+        return new Date(y, m - 1, d);
+    };
+
     // ===============================
     // Load posts paginados
     // ===============================
@@ -195,7 +201,7 @@ export default function TimelinePage({ teamId }) {
                                 <p className="text-sm mt-2 font-extrabold font-mono text-white bg-primary opacity-80 px-2 py-1 rounded-lg flex flex-col items-center w-full">
                                     <span className="text-xs">DESDE</span>
                                     <span className="text-sm">
-                                        {new Date(teamline.foundation_date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}
+                                        {parseLocalDate(teamline.foundation_date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}
                                     </span>
                                 </p>
                             </div>
@@ -226,7 +232,7 @@ export default function TimelinePage({ teamId }) {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-extrabold font-mono text-slate-400">
-                                            {new Date(moment.date).toLocaleDateString("es-ES", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}
+                                            {parseLocalDate(moment.date).toLocaleDateString("es-ES", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}
                                         </span>
                                         <div className="h-px flex-1 bg-slate-700" />
                                     </div>
