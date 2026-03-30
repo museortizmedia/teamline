@@ -183,17 +183,27 @@ export const teamService = {
             }
 
             // 3️⃣ Subir archivos y registrar media
-            const mediaPromises = files.map(async ({ file }, index) => {
+            const mediaPromises = files.map(async ({ file }) => {
 
-                const filePath = `${post.post_id}/${Date.now()}_${file.name}`;
+                let processedFile = file;
+
+                if (file.type.startsWith("image")) {
+                    try {
+                        processedFile = await imageService.compressToWebP(file, 0.75, 1200);
+                    } catch (e) {
+                        console.warn("Compression failed, using original", e);
+                    }
+                }
+
+                const filePath = `${post.post_id}/${Date.now()}_${processedFile.name}`;
 
                 // subir a storage
                 const { error: uploadError } = await supabaseService.storage.upload(
                     "post-media",
                     filePath,
-                    file,
+                    processedFile,
                     {
-                        contentType: file.type
+                        contentType: processedFile.type
                     }
                 );
 
