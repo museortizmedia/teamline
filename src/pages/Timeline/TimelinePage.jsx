@@ -239,7 +239,7 @@ export default function TimelinePage({ teamId }) {
                         <button
                             key={year}
                             onClick={() => {
-                                setSelectedYear(year);
+                                setSelectedYear(selectedYear === year ? null : year);
                                 setSelectedMonth(null);
                             }}
                             className={`text-xs px-2 py-1 rounded ${selectedYear === year ? "bg-primary text-white" : "text-slate-400 hover:text-white"}`}
@@ -254,7 +254,7 @@ export default function TimelinePage({ teamId }) {
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
                             <button
                                 key={m}
-                                onClick={() => setSelectedMonth(m)}
+                                onClick={() => setSelectedMonth(selectedMonth === m ? null : m)}
                                 className={`text-xs px-2 py-1 rounded ${selectedMonth === m ? "bg-primary text-white" : "text-slate-400"}`}
                             >
                                 {new Date(0, m - 1).toLocaleString("es-ES", { month: "short" })}
@@ -292,12 +292,15 @@ export default function TimelinePage({ teamId }) {
                                     <div className="overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-800">
 
                                         {moment.media?.length === 1 && (
-                                            <ImageWithSkeleton
-                                                src={moment.media[0].low_quality_url || moment.media[0].url}
-                                                alt={moment.title || "Media"}
-                                                className="w-full h-[400px] object-cover cursor-pointer"
-                                                onClick={(e) => { e.stopPropagation(); openImageModal(moment.media, 0); }}
-                                            />
+                                            <div className="relative">
+                                                <ImageWithSkeleton
+                                                    src={moment.media[0].low_quality_url || moment.media[0].url}
+                                                    alt={moment.title || "Media"}
+                                                    className="w-full h-[400px] object-cover cursor-pointer hover:scale-[1.02] transition-transform"
+                                                    onClick={(e) => { e.stopPropagation(); openImageModal(moment.media, 0); }}
+                                                />
+                                                <div className="absolute -bottom-2 -left-2 right-0 h-24 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+                                            </div>
                                         )}
 
                                         <div className="p-4">
@@ -312,7 +315,7 @@ export default function TimelinePage({ teamId }) {
                                                         {moment.media.map((m, i) => (
                                                             <div
                                                                 key={i}
-                                                                className="break-inside-avoid cursor-pointer"
+                                                                className="break-inside-avoid cursor-pointer "
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     openImageModal(moment.media, i);
@@ -326,7 +329,7 @@ export default function TimelinePage({ teamId }) {
                                                             </div>
                                                         ))}
                                                     </div>
-                                                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
+                                                    <div className="absolute -bottom-2 -left-2 right-0 h-24 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
                                                 </div>
                                             </div>
                                         )}
