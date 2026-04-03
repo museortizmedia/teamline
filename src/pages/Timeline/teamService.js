@@ -378,54 +378,77 @@ export const teamService = {
     },
 
     // TIMELINE
-    async getTimeline(teamId, { limit = 10, offset = 0 } = {}) {
-        const { data, error } = await supabaseService.supabase
+    async getTimeline(teamId, {
+        limit = 10,
+        offset = 0,
+        year = null,
+        month = null
+    } = {}) {
+        let query = supabaseService.supabase
             .from("posts_with_role")
             .select(`
-        post_id,
-        title,
-        content,
-        post_date,
-        created_at,
-        creator_id,
-        role,
+            post_id,
+            title,
+            content,
+            post_date,
+            created_at,
+            creator_id,
+            role,
+            profiles!posts_creator_id_fkey (
+                username,
+                display_name,
+                profile_pic
+            ),
+            post_media (
+                media_url,
+                media_type
+            )
+        `)
+            .eq("team_id", teamId);
 
-        profiles!posts_creator_id_fkey (
-            username,
-            display_name,
-            profile_pic
-        ),
+        // ===============================
+        // FILTRO POR AÑO
+        // ===============================
+        if (year) {
+            query = query.gte("post_date", `${year}-01-01`)
+                .lte("post_date", `${year}-12-31`);
+        }
 
-        post_media (
-            media_url,
-            media_type
-        )
-    `)
-            .eq("team_id", teamId)
+        // ===============================
+        // FILTRO POR MES
+        // ===============================
+        if (year && month) {
+            const start = `${year}-${String(month).padStart(2, "0")}-01`;
+
+            const endDate = new Date(year, month, 0); // último día del mes
+            const end = `${year}-${String(month).padStart(2, "0")}-${endDate.getDate()}`;
+
+            query = query.gte("post_date", start)
+                .lte("post_date", end);
+        }
+
+        // ===============================
+        // ORDEN + PAGINACIÓN
+        // ===============================
+        const { data, error } = await query
             .order("post_date", { ascending: false })
             .order("created_at", { ascending: false })
             .range(offset, offset + limit - 1);
 
         if (error) throw error;
 
-        /*console.log(data.map(p => ({
-            date: p.post_date,
-            created: p.created_at
-        })));*/
-
         return data.map(p => ({
             id: p.post_id,
             title: p.title,
             text: p.content,
             date: p.post_date,
+            created: p.created_at,
             role: p.role,
             creator: {
                 id: p.creator_id,
                 name: p.profiles?.display_name || p.profiles?.username,
-                avatar: p.profiles?.profile_pic,
-                role: p.role || "member"
+                avatar: p.profiles?.profile_pic
             },
-
             media: (p.post_media || []).map(m => ({
                 url: m.media_url,
                 type: m.media_type
@@ -451,7 +474,6 @@ export const teamService = {
             profile_pic: m.profiles.profile_pic
         }));
     },
-
     async changeMemberRole({ teamId, userId, role }) {
         const { data, error } = await supabaseService.supabase
             .from("team_memberships")
@@ -464,7 +486,6 @@ export const teamService = {
         if (error) throw error;
         return data;
     },
-
     async updateMemberDates({ teamId, userId, active_from, active_to }) {
         const payload = {
             updated_at: new Date()
@@ -484,7 +505,6 @@ export const teamService = {
         if (error) throw error;
         return data;
     },
-
     async getJoinRequests(teamId) {
         // Implementa tu lógica para solicitudes pendientes
         return []; // placeholder

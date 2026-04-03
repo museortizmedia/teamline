@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trophy, Share2, Heart, MessageCircle, Plus, Send, Flag, X } from "lucide-react";
+import { Trophy, Share2, Heart, MessageCircle, Plus, Send, Flag, X, ChevronRight, ChevronLeft } from "lucide-react";
 
 import CreateMemoryPage from "../Memory/CreateMemoryPage";
 import { useRouterApp } from "../../RouterApp";
@@ -28,29 +28,50 @@ export default function TimelinePage({ teamId }) {
     const [commentInput, setCommentInput] = useState({});
     const [openComments, setOpenComments] = useState({});
 
-    // Modal de imagen
     const [modalOpen, setModalOpen] = useState(false);
     const [modalImages, setModalImages] = useState([]);
     const [modalIndex, setModalIndex] = useState(0);
 
+    const [selectedYear, setSelectedYear] = useState(null);
+    const [selectedMonth, setSelectedMonth] = useState(null);
+
     const parseLocalDate = (dateString) => {
         if (!dateString) return null;
-        const [y, m, d] = dateString.split("-").map(Number);
-        return new Date(y, m - 1, d);
+        const date = new Date(dateString);
+        if (!isNaN(date.getTime())) return date;
+        const match = dateString.match(/^\d{4}-\d{2}-\d{2}/);
+        if (match) {
+            const [y, m, d] = match[0].split("-").map(Number);
+            return new Date(y, m - 1, d);
+        }
+        return null;
     };
 
-    // ===============================
-    // Load posts paginados
-    // ===============================
-    const loadPosts = async (pageToLoad = 0) => {
+    const getYearsRange = (foundationDate) => {
+        if (!foundationDate) return [];
+        const parsed = parseLocalDate(foundationDate);
+        if (!parsed) return [];
+        const startYear = parsed.getFullYear();
+        const currentYear = new Date().getFullYear();
+        const years = [];
+        for (let y = currentYear; y >= startYear; y--) {
+            years.push(y);
+        }
+        return years;
+    };
+
+    const loadPosts = async (pageToLoad = 0, reset = false) => {
         try {
             const newPosts = await teamService.getTimeline(teamId, {
                 limit: 10,
-                offset: pageToLoad * 10
+                offset: pageToLoad * 10,
+                year: selectedYear,
+                month: selectedMonth
             });
 
             if (newPosts.length < 10) setHasMore(false);
-            setPosts(prev => pageToLoad === 0 ? newPosts : [...prev, ...newPosts]);
+
+            setPosts(prev => reset ? newPosts : (pageToLoad === 0 ? newPosts : [...prev, ...newPosts]));
 
             newPosts.forEach(async (p) => {
                 const likeData = await teamService.getPostLikes(p.id);
@@ -63,9 +84,6 @@ export default function TimelinePage({ teamId }) {
         }
     };
 
-    // ===============================
-    // Likes / Comments
-    // ===============================
     const handleLike = async (postId) => {
         if (!isAuthenticated) { setPage("login"); return; }
         await teamService.toggleLike({ postId, userId: user.id });
@@ -88,9 +106,7 @@ export default function TimelinePage({ teamId }) {
     };
 
     const handleShare = async (postId, postTitle) => {
-        // Construimos la URL siguiendo tu lógica de rutas: /p/id
         const url = `${window.location.origin}/p/${postId}`;
-
         const shareData = {
             title: postTitle || "Mira este recuerdo en TeamLine",
             text: `Echa un vistazo a este momento: ${postTitle}`,
@@ -98,13 +114,10 @@ export default function TimelinePage({ teamId }) {
         };
 
         try {
-            // Intentar usar el API nativo (móviles)
             if (navigator.share && navigator.canShare(shareData)) {
                 await navigator.share(shareData);
             } else {
-                // Fallback para escritorio: Copiar al portapapeles
                 await navigator.clipboard.writeText(url);
-                // Opcional: podrías usar un toast o notificación aquí
                 alert("¡Enlace copiado al portapapeles!");
             }
         } catch (err) {
@@ -112,9 +125,6 @@ export default function TimelinePage({ teamId }) {
         }
     };
 
-    // ===============================
-    // Load initial data
-    // ===============================
     useEffect(() => {
         if (!teamId) return;
 
@@ -123,19 +133,28 @@ export default function TimelinePage({ teamId }) {
                 setLoading(true);
                 const teamData = await teamService.getTeamById(teamId);
                 setTeamline(teamData);
-                await loadPosts(0);
+                setSelectedYear(null);
+                setSelectedMonth(null);
+                setPageNum(0);
+                await loadPosts(0, true);
             } catch (err) {
                 console.error("Error loading timeline:", err);
                 setTeamline(null);
-            } finally { setLoading(false); }
+            } finally {
+                setLoading(false);
+            }
         };
 
         loadData();
     }, [teamId]);
 
-    // ===============================
-    // Transform posts
-    // ===============================
+    useEffect(() => {
+        if (!teamId) return;
+        setPageNum(0);
+        setHasMore(true);
+        loadPosts(0, true);
+    }, [selectedYear, selectedMonth]);
+
     const moments = posts.map(post => ({
         id: post.id,
         title: post.title,
@@ -145,13 +164,11 @@ export default function TimelinePage({ teamId }) {
         avatar: post.creator?.avatar,
         role: post.role,
         media: post.media || [],
+        created: post.created,
         icon: Trophy,
         accent: "bg-primary"
     }));
 
-    // ===============================
-    // Modal functions
-    // ===============================
     const openImageModal = (images, index = 0) => {
         setModalImages(images);
         setModalIndex(index);
@@ -160,18 +177,26 @@ export default function TimelinePage({ teamId }) {
 
     const closeModal = () => setModalOpen(false);
 
-    // Navegacion modal con teclado
     useEffect(() => {
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') closeModal();
+        const handleKey = (e) => {
+            if (!modalOpen) return;
+            if (e.key === "Escape") closeModal();
+            if (e.key === "ArrowRight") nextImage();
+            if (e.key === "ArrowLeft") prevImage();
         };
-        window.addEventListener('keydown', handleEsc);
-        return () => window.removeEventListener('keydown', handleEsc);
-    }, []);
 
-    // ===============================
-    // Render
-    // ===============================
+        window.addEventListener("keydown", handleKey);
+        return () => window.removeEventListener("keydown", handleKey);
+    }, [modalOpen, modalImages]);
+
+    const nextImage = () => {
+        setModalIndex((prev) => (prev + 1) % modalImages.length);
+    };
+
+    const prevImage = () => {
+        setModalIndex((prev) => prev === 0 ? modalImages.length - 1 : prev - 1);
+    };
+
     return (
         <div className="min-h-screen bg-background-dark text-slate-100 font-display max-w-7xl mx-auto">
 
@@ -201,7 +226,7 @@ export default function TimelinePage({ teamId }) {
                                 <p className="text-sm mt-2 font-extrabold font-mono text-white bg-primary opacity-80 px-2 py-1 rounded-lg flex flex-col items-center w-full">
                                     <span className="text-xs">DESDE</span>
                                     <span className="text-sm">
-                                        {parseLocalDate(teamline.foundation_date).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}
+                                        {parseLocalDate(teamline.foundation_date)?.toLocaleDateString("es-ES", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}
                                     </span>
                                 </p>
                             </div>
@@ -209,7 +234,35 @@ export default function TimelinePage({ teamId }) {
                     </section>
                 )}
 
-                {/* TIMELINE */}
+                <div className="fixed left-4 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+                    {teamline && getYearsRange(teamline.foundation_date).map(year => (
+                        <button
+                            key={year}
+                            onClick={() => {
+                                setSelectedYear(year);
+                                setSelectedMonth(null);
+                            }}
+                            className={`text-xs px-2 py-1 rounded ${selectedYear === year ? "bg-primary text-white" : "text-slate-400 hover:text-white"}`}
+                        >
+                            {year}
+                        </button>
+                    ))}
+                </div>
+
+                {selectedYear && (
+                    <div className="flex gap-2 overflow-x-auto px-6">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                            <button
+                                key={m}
+                                onClick={() => setSelectedMonth(m)}
+                                className={`text-xs px-2 py-1 rounded ${selectedMonth === m ? "bg-primary text-white" : "text-slate-400"}`}
+                            >
+                                {new Date(0, m - 1).toLocaleString("es-ES", { month: "short" })}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 <div className="relative px-6 py-4">
                     <div className="absolute left-[39px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-primary to-slate-700 opacity-40" />
 
@@ -222,7 +275,6 @@ export default function TimelinePage({ teamId }) {
 
                         return (
                             <div key={moment.id} className="relative mb-10 grid grid-cols-[40px_1fr] gap-4 cursor-pointer">
-
                                 <div className="z-10 flex flex-col items-center pt-2">
                                     <div className={`flex h-10 w-10 items-center justify-center rounded-full ${moment.accent}`}>
                                         <Icon size={18} />
@@ -232,14 +284,13 @@ export default function TimelinePage({ teamId }) {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm font-extrabold font-mono text-slate-400">
-                                            {parseLocalDate(moment.date).toLocaleDateString("es-ES", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}
+                                            {parseLocalDate(moment.date)?.toLocaleDateString("es-ES", { month: "short", day: "2-digit", year: "numeric" }).toUpperCase()}
                                         </span>
                                         <div className="h-px flex-1 bg-slate-700" />
                                     </div>
 
-                                    <div className="overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-800" >
+                                    <div className="overflow-hidden rounded-2xl bg-slate-900 ring-1 ring-slate-800">
 
-                                        {/* MEDIA HERO (solo si hay 1 imagen) */}
                                         {moment.media?.length === 1 && (
                                             <ImageWithSkeleton
                                                 src={moment.media[0].low_quality_url || moment.media[0].url}
@@ -248,46 +299,51 @@ export default function TimelinePage({ teamId }) {
                                                 onClick={(e) => { e.stopPropagation(); openImageModal(moment.media, 0); }}
                                             />
                                         )}
+
                                         <div className="p-4">
                                             <h3 className="font-bold text-lg" onClick={() => window.open(`/p/${moment.id}`, "_blank")}>{moment.title}</h3>
                                             <p className="mt-1 text-sm text-slate-400">{moment.text}</p>
                                         </div>
 
-                                        {/* MEDIA HERO / MASONRY */}
                                         {moment.media?.length > 1 && (
-                                            <div className="relative mt-3 px-4 max-h-[400px] overflow-hidden">
-
-                                                <div className="columns-2 md:columns-3 gap-2 space-y-2">
-                                                    {moment.media.map((m, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className="break-inside-avoid cursor-pointer"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                openImageModal(moment.media, i);
-                                                            }}
-                                                        >
-                                                            <ImageWithSkeleton
-                                                                src={m.low_quality_url || m.url}
-                                                                alt={moment.title || "Media"}
-                                                                className="w-full rounded-lg mb-2 transition-transform hover:scale-[1.02]"
-                                                            />
-                                                        </div>
-                                                    ))}
+                                            <div className="mt-3 px-4">
+                                                <div className="relative">
+                                                    <div className="columns-2 md:columns-3 gap-2 space-y-2">
+                                                        {moment.media.map((m, i) => (
+                                                            <div
+                                                                key={i}
+                                                                className="break-inside-avoid cursor-pointer"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    openImageModal(moment.media, i);
+                                                                }}
+                                                            >
+                                                                <ImageWithSkeleton
+                                                                    src={m.low_quality_url || m.url}
+                                                                    alt="Media"
+                                                                    className="w-full rounded-lg mb-2 hover:scale-[1.02] transition-transform"
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
                                                 </div>
-
-                                                {/* Fade inferior */}
-                                                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none" />
-
                                             </div>
                                         )}
 
-                                        {/* BOTONES */}
                                         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
                                             <div className="flex items-center gap-2 min-w-0">
                                                 <img src={moment.avatar || defaultAvatar} className="h-8 w-8 rounded-full flex-shrink-0" />
-                                                <div className="flex flex-col min-w-0 space-y-1">
-                                                    <span className="text-xs font-bold truncate">{moment.author}</span>
+                                                <div className="flex flex-col min-w-0 leading-tight space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-semibold truncate">{moment.author}</span>
+                                                        <span className="text-xs text-slate-500">
+                                                            · {(() => {
+                                                                const d = parseLocalDate(moment.created);
+                                                                return d ? d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" }) : "";
+                                                            })()}
+                                                        </span>
+                                                    </div>
                                                     <RoleBadge role={moment.role} />
                                                 </div>
                                             </div>
@@ -313,35 +369,19 @@ export default function TimelinePage({ teamId }) {
                                         </div>
 
                                         {isOpen && (
-                                            <div
-                                                className="mt-2 border-t border-slate-800 p-4 flex flex-col gap-3 bg-slate-900/50 overflow-hidden"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-
-                                                {/* LISTA DE COMENTARIOS */}
+                                            <div className="mt-2 border-t border-slate-800 p-4 flex flex-col gap-3 bg-slate-900/50 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                                                 <div className="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar min-w-0">
                                                     {postComments.map(c => (
-                                                        <div
-                                                            key={c.id}
-                                                            className="text-sm text-slate-300 break-all leading-relaxed"
-                                                        >
-                                                            <b className="text-primary-light">{c.creator.name}:</b>{" "}
-                                                            <span className="break-all">{c.text}</span>
+                                                        <div key={c.id} className="text-sm text-slate-300 break-all leading-relaxed">
+                                                            <b className="text-primary-light">{c.creator.name}:</b> <span className="break-all">{c.text}</span>
                                                         </div>
                                                     ))}
                                                 </div>
 
-                                                {/* INPUT + BOTÓN */}
                                                 <div className="flex gap-2 items-center min-w-0">
-
                                                     <input
                                                         value={commentInput[moment.id] || ""}
-                                                        onChange={(e) =>
-                                                            setCommentInput(prev => ({
-                                                                ...prev,
-                                                                [moment.id]: e.target.value
-                                                            }))
-                                                        }
+                                                        onChange={(e) => setCommentInput(prev => ({ ...prev, [moment.id]: e.target.value }))}
                                                         placeholder="Comentar..."
                                                         className="flex-1 w-0 min-w-0 bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-primary transition-all"
                                                     />
@@ -353,13 +393,11 @@ export default function TimelinePage({ teamId }) {
                                                     >
                                                         <Send size={18} />
                                                     </button>
-
                                                 </div>
                                             </div>
                                         )}
 
                                     </div>
-
                                 </div>
                             </div>
                         );
@@ -367,7 +405,6 @@ export default function TimelinePage({ teamId }) {
                 </div>
             </main>
 
-            {/* FAB */}
             {isAuthenticated && team?.team_id === teamline?.team_id && (
                 <button className="fixed bottom-20 right-8 h-14 w-14 rounded-full bg-primary flex items-center justify-center z-50 shadow-lg"
                     onClick={() => setOpenEditor(true)}>
@@ -377,60 +414,46 @@ export default function TimelinePage({ teamId }) {
 
             <CreateMemoryPage isOpen={openEditor} onClose={() => setOpenEditor(false)} />
 
-
-
-            {/* MODAL DE IMAGEN */}
             {modalOpen && (
-                <div
-                    className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
-                    onClick={closeModal}
-                >
-
-                    {/* BOTÓN CERRAR */}
-                    <button
-                        className="absolute top-4 right-4 z-[60] p-2 text-white/70 hover:text-white bg-black/40 rounded-full"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            closeModal();
-                        }}
-                    >
+                <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={closeModal}>
+                    <button className="absolute top-4 right-4 z-[60] p-2 text-white/70 hover:text-white bg-black/40 rounded-full"
+                        onClick={(e) => { e.stopPropagation(); closeModal(); }}>
                         <X size={32} />
                     </button>
 
-                    {/* CONTENEDOR INTERNO */}
-                    <div
-                        className="w-screen h-screen flex items-center justify-center p-4"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="relative flex items-center justify-center">
+                    <div className="w-screen h-screen flex items-center justify-center p-4">
+                        <div className="relative flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
 
-                            {/* SKELETON */}
                             {!modalImages[modalIndex]?.loaded && (
                                 <div className="absolute inset-0 bg-slate-700 animate-pulse rounded" />
                             )}
 
-                            <img
-                                src={modalImages[modalIndex]?.url}
-                                alt="Imagen del post"
-                                onClick={(e) => e.stopPropagation()}
-                                onLoad={() => {
-                                    setModalImages(prev =>
-                                        prev.map((img, i) =>
-                                            i === modalIndex ? { ...img, loaded: true } : img
-                                        )
-                                    );
-                                }}
-                                className="
-                        object-contain 
-                        rounded
-                        transition-opacity duration-300
-                        max-w-[calc(100vw-2rem)]
-                        max-h-[calc(100vh-2rem)]
-                    "
-                                style={{
-                                    opacity: modalImages[modalIndex]?.loaded ? 1 : 0
-                                }}
-                            />
+                            <div className="relative group mb-20">
+                                <img
+                                    src={modalImages[modalIndex]?.url}
+                                    alt="Imagen del post"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onLoad={() => {
+                                        setModalImages(prev =>
+                                            prev.map((img, i) =>
+                                                i === modalIndex ? { ...img, loaded: true } : img
+                                            )
+                                        );
+                                    }}
+                                    className="object-contain rounded transition-opacity duration-300 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]"
+                                    style={{ opacity: modalImages[modalIndex]?.loaded ? 1 : 0 }}
+                                />
+
+                                <button onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                                    className="absolute left-0 top-0 h-full w-20 flex items-center justify-start pl-3 bg-gradient-to-r from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <ChevronLeft className="text-white" size={28} />
+                                </button>
+
+                                <button onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                                    className="absolute right-0 top-0 h-full w-20 flex items-center justify-end pr-3 bg-gradient-to-l from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <ChevronRight className="text-white" size={28} />
+                                </button>
+                            </div>
 
                         </div>
                     </div>
