@@ -1,3 +1,4 @@
+import { imageService } from "../../services/imageService";
 import { supabaseService } from "../../services/supabase/services/supabaseService";
 
 export const teamService = {
@@ -189,7 +190,14 @@ export const teamService = {
 
                 if (file.type.startsWith("image")) {
                     try {
-                        processedFile = await imageService.compressToWebP(file, 0.75, 1200);
+                        processedFile = await imageService.compressToWebP(file, {
+                            maxDimension: 1080,
+                            initialQuality: 0.8
+                        });
+
+                        console.log("ORIGINAL:", file.size / 1024, "KB");
+                        console.log("PROCESADO:", processedFile.size / 1024, "KB");
+
                     } catch (e) {
                         console.warn("Compression failed, using original", e);
                     }

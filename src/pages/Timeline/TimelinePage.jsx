@@ -69,16 +69,18 @@ export default function TimelinePage({ teamId }) {
                 month: selectedMonth
             });
 
-            if (newPosts.length < 10) setHasMore(false);
+            setHasMore(newPosts.length === 10);
 
-            setPosts(prev => reset ? newPosts : (pageToLoad === 0 ? newPosts : [...prev, ...newPosts]));
+            setPosts(prev => reset ? newPosts : [...prev, ...newPosts]);
 
             newPosts.forEach(async (p) => {
                 const likeData = await teamService.getPostLikes(p.id);
                 const commentData = await teamService.getPostComments(p.id);
+
                 setLikes(prev => ({ ...prev, [p.id]: likeData }));
                 setComments(prev => ({ ...prev, [p.id]: commentData }));
             });
+
         } catch (err) {
             console.error("Error loading posts:", err);
         }
@@ -150,9 +152,11 @@ export default function TimelinePage({ teamId }) {
 
     useEffect(() => {
         if (!teamId) return;
+
         setPageNum(0);
         setHasMore(true);
         loadPosts(0, true);
+
     }, [selectedYear, selectedMonth]);
 
     const moments = posts.map(post => ({
@@ -169,6 +173,15 @@ export default function TimelinePage({ teamId }) {
         accent: "bg-primary"
     }));
 
+    const handleMemoryCreated = async () => {
+        setOpenEditor(false);
+
+        setPageNum(0);
+        setHasMore(true);
+
+        await loadPosts(0, true);
+    };
+
     const openImageModal = (images, index = 0) => {
         setModalImages(images);
         setModalIndex(index);
@@ -176,6 +189,24 @@ export default function TimelinePage({ teamId }) {
     };
 
     const closeModal = () => setModalOpen(false);
+
+    // Botón Cargar más
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const handleLoadMore = async () => {
+        if (loadingMore) return;
+
+        setLoadingMore(true);
+
+        const nextPage = page + 1;
+        setPageNum(nextPage);
+
+        await loadPosts(nextPage, false);
+
+        setLoadingMore(false);
+    };
+
+    // Key Control Image View
 
     useEffect(() => {
         const handleKey = (e) => {
@@ -402,9 +433,34 @@ export default function TimelinePage({ teamId }) {
 
                                     </div>
                                 </div>
+
                             </div>
                         );
                     })}
+
+                    {hasMore && (
+                        <div className="flex justify-center mt-6">
+                            <button
+                                onClick={handleLoadMore}
+                                disabled={loadingMore}
+                                className="px-6 py-3 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                            >
+                                {loadingMore ? (
+                                    <div className="flex items-center justify-center">
+                                        <div className="h-5 w-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                ) : (
+                                    "Cargar más"
+                                )}
+                            </button>
+                        </div>
+                    )}
+
+                    {moments.length === 0 && (
+                        <div className="text-center py-12">
+                            <p className="text-slate-400">No hay posts aquí. <a className="text-primary hover:text-primary-dark cursor-pointer" onClick={() => setOpenEditor(true)}>Crea uno ahora</a></p>
+                        </div>
+                    )}
                 </div>
             </main>
 
@@ -415,7 +471,7 @@ export default function TimelinePage({ teamId }) {
                 </button>
             )}
 
-            <CreateMemoryPage isOpen={openEditor} onClose={() => setOpenEditor(false)} />
+            <CreateMemoryPage isOpen={openEditor} onClose={() => setOpenEditor(false)} onCreated={handleMemoryCreated} />
 
             {modalOpen && (
                 <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={closeModal}>
@@ -446,16 +502,18 @@ export default function TimelinePage({ teamId }) {
                                     className="object-contain rounded transition-opacity duration-300 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)]"
                                     style={{ opacity: modalImages[modalIndex]?.loaded ? 1 : 0 }}
                                 />
+                                {modalImages.length > 1 && (<>
+                                    <button onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                                        className="absolute left-0 top-0 h-full w-20 flex items-center justify-start pl-3 bg-gradient-to-r from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <ChevronLeft className="text-white" size={28} />
+                                    </button>
 
-                                <button onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                                    className="absolute left-0 top-0 h-full w-20 flex items-center justify-start pl-3 bg-gradient-to-r from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <ChevronLeft className="text-white" size={28} />
-                                </button>
 
-                                <button onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                                    className="absolute right-0 top-0 h-full w-20 flex items-center justify-end pr-3 bg-gradient-to-l from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                    <ChevronRight className="text-white" size={28} />
-                                </button>
+                                    <button onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                                        className="absolute right-0 top-0 h-full w-20 flex items-center justify-end pr-3 bg-gradient-to-l from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <ChevronRight className="text-white" size={28} />
+                                    </button>
+                                </>)}
                             </div>
 
                         </div>

@@ -1,14 +1,18 @@
+import { useState } from "react";
 import exifr from "exifr";
 import { ImagePlus, LucideImageOff, X } from "lucide-react";
+import { parseLocalDate } from "../../utils/parseLocalDate";
 
 export default function MediaGallery({ files, setFiles, minDate, maxDate, setDate, setDateTouched }) {
+
+    const [dimensions, setDimensions] = useState({});
 
     const isDateValid = (dateString) => {
         if (!dateString) return false;
 
-        const d = new Date(dateString);
-        const min = minDate ? new Date(minDate) : null;
-        const max = maxDate ? new Date(maxDate) : null;
+        const d = parseLocalDate(dateString);
+        const min = minDate ? parseLocalDate(minDate) : null;
+        const max = maxDate ? parseLocalDate(maxDate) : null;
 
         if (min && d < min) return false;
         if (max && d > max) return false;
@@ -21,13 +25,29 @@ export default function MediaGallery({ files, setFiles, minDate, maxDate, setDat
             const exif = await exifr.parse(file);
 
             if (exif?.DateTimeOriginal) {
-                const d = new Date(exif.DateTimeOriginal);
+                const raw = exif.DateTimeOriginal;
 
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, "0");
-                const dd = String(d.getDate()).padStart(2, "0");
+                if (typeof raw === "string") {
+                    const [datePart] = raw.split(" ");
+                    const [y, m, d] = datePart.split(":").map(Number);
 
-                return `${yyyy}-${mm}-${dd}`;
+                    return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+                }
+
+                if (raw instanceof Date) {
+                    const colombiaOffset = -5 * 60;
+                    const localOffset = raw.getTimezoneOffset();
+
+                    const corrected = new Date(
+                        raw.getTime() + (localOffset - colombiaOffset) * 60000
+                    );
+
+                    const yyyy = corrected.getFullYear();
+                    const mm = String(corrected.getMonth() + 1).padStart(2, "0");
+                    const dd = String(corrected.getDate()).padStart(2, "0");
+
+                    return `${yyyy}-${mm}-${dd}`;
+                }
             }
 
         } catch (e) {
@@ -42,12 +62,28 @@ export default function MediaGallery({ files, setFiles, minDate, maxDate, setDat
         const addedFiles = Array.from(newFiles);
 
         const processed = await Promise.all(
-            addedFiles.map(async (file) => ({
-                file,
-                date: file.type.startsWith("image")
-                    ? await extractDateFromFile(file)
-                    : null
-            }))
+            addedFiles.map(async (file) => {
+
+                let processedFile = file;
+
+                if (file.type.startsWith("image")) {
+                    try {
+                        processedFile = await imageService.compressToWebP(file, {
+                            maxDimension: 1080,
+                            initialQuality: 0.8
+                        });
+                    } catch (e) {
+                        console.warn("Compression failed, using original", e);
+                    }
+                }
+
+                return {
+                    file: processedFile,
+                    date: file.type.startsWith("image")
+                        ? await extractDateFromFile(file)
+                        : null
+                };
+            })
         );
 
         const totalFiles = [...currentFiles, ...processed].slice(0, 6);
@@ -84,7 +120,7 @@ export default function MediaGallery({ files, setFiles, minDate, maxDate, setDat
 
             <label
                 htmlFor="fileInput"
-                className={`flex-1 border-2 border-dashed border-slate-700 rounded-2xl flex flex-col items-center justify-center gap-3 transition ${isFull
+                className={`flex-1 border-2 border-dashed border-slate-700 rounded-2xl flex flex-col items-center justify-center gap-2 md:gap-3 transition ${isFull
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:border-primary cursor-pointer"
                     }`}
@@ -133,21 +169,25 @@ export default function MediaGallery({ files, setFiles, minDate, maxDate, setDat
                                     src={URL.createObjectURL(file)}
                                     className="w-full h-full object-cover"
                                     alt={`Vista previa ${i + 1}`}
+                                    onLoad={(e) => {
+                                        const { naturalWidth, naturalHeight } = e.target;
+
+                                        setDimensions(prev => ({
+                                            ...prev,
+                                            [i]: {
+                                                width: naturalWidth,
+                                                height: naturalHeight
+                                            }
+                                        }));
+                                    }}
                                 />
                             )}
 
                             {date && (
                                 <div
-                                    className={`
-                                        absolute bottom-1.5 left-1.5 z-10
-                                        px-2 py-0.5 text-[10px] font-medium
-                                        rounded-full shadow-lg backdrop-blur-sm
-                                        ${isDateValid(date)
-                                            ? "bg-black/60 text-white"
-                                            : "bg-red-600/80 text-white"}
-                                    `}
+                                    className={`absolute bottom-1.5 left-1.5 z-10 px-2 py-0.5 text-[10px] font-medium rounded-full shadow-lg backdrop-blur-sm ${isDateValid(date) ? "bg-black/60 text-white" : "bg-red-600/80 text-white"}`}
                                 >
-                                    {new Date(date).toLocaleDateString("es-ES", {
+                                    {parseLocalDate(date)?.toLocaleDateString("es-ES", {
                                         day: "numeric",
                                         month: "short",
                                         year: "numeric"
@@ -157,6 +197,12 @@ export default function MediaGallery({ files, setFiles, minDate, maxDate, setDat
 
                             {date && isDateValid(date) && (
                                 <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition pointer-events-none" />
+                            )}
+
+                            {dimensions[i] && (
+                                <div className="absolute bottom-1.5 right-1.5 z-10 px-2 py-0.5 text-[10px] font-medium rounded-full shadow-lg backdrop-blur-sm bg-black/60 text-white">
+                                    {dimensions[i].width}×{dimensions[i].height}
+                                </div>
                             )}
 
                             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent 

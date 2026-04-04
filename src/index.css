@@ -98,6 +98,49 @@ h6 {
 }
 
 /* ================================
+   Scrollbars (Global Styling)
+   ================================ */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+  /* thumb / track */
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  /* slate-400 soft */
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: var(--color-primary);
+}
+
+/* Corner (cuando hay scroll horizontal + vertical) */
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ================================
    Design Tokens
    ================================ */
 

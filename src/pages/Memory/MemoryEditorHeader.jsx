@@ -24,7 +24,7 @@ export default function MemoryEditorHeader({ onClose, onPost, isPosting, isValid
 
             {/* TÍTULO */}
             <h2 className="font-bold text-lg text-center">
-                Nueva memoria para {team?.name}
+                Crear memoria para {team?.name}
             </h2>
 
             {/* BOTÓN PUBLICAR */}
