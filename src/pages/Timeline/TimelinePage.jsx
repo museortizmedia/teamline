@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Trophy, Share2, Heart, MessageCircle, Plus, Send, Flag, X, ChevronRight, ChevronLeft } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Trophy, Share2, Heart, MessageCircle, Plus, Send, Flag, X, ChevronRight, ChevronLeft, Smile } from "lucide-react";
 
 import CreateMemoryPage from "../Memory/CreateMemoryPage";
 import { useRouterApp } from "../../RouterApp";
@@ -10,6 +10,7 @@ import RoleBadge from "../../components/RoleBadge";
 import ImageWithSkeleton from "../../components/ImageWithSkeleton";
 import defaultAvatar from "../../assets/default-avatar.webp";
 import { AnimatePresence } from "framer-motion";
+import EmojiPicker from "../../components/EmojiPicker";
 
 export default function TimelinePage({ teamId }) {
     const { setPage } = useRouterApp();
@@ -228,6 +229,43 @@ export default function TimelinePage({ teamId }) {
         setModalIndex((prev) => prev === 0 ? modalImages.length - 1 : prev - 1);
     };
 
+    // Emoji picker
+    const [showEmojiPicker, setShowEmojiPicker] = useState(null);
+    const commentRefs = useRef({});
+    const insertEmojiComment = (postId, emoji) => {
+        const el = commentRefs.current[postId];
+        if (!el) return;
+
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+
+        const text = commentInput[postId] || "";
+
+        const newText =
+            text.slice(0, start) + emoji + text.slice(end);
+
+        setCommentInput(prev => ({
+            ...prev,
+            [postId]: newText
+        }));
+
+        setTimeout(() => {
+            el.selectionStart = el.selectionEnd = start + emoji.length;
+            el.focus();
+        }, 0);
+    };
+
+    const onSelect = (emoji) => {
+        insertEmojiComment(moment.id, emoji)
+        setShowEmojiPicker(null)
+    }
+
+    useEffect(() => {
+        const close = () => setShowEmojiPicker(null);
+        window.addEventListener("click", close);
+        return () => window.removeEventListener("click", close);
+    }, []);
+
     return (
         <div className="min-h-screen bg-background-dark text-slate-100 font-display max-w-7xl mx-auto">
 
@@ -403,7 +441,10 @@ export default function TimelinePage({ teamId }) {
                                         </div>
 
                                         {isOpen && (
-                                            <div className="mt-2 border-t border-slate-800 p-4 flex flex-col gap-3 bg-slate-900/50 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                                            <div
+                                                className="mt-2 border-t border-slate-800 p-4 flex flex-col gap-3 bg-slate-900/50 overflow-visible"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
                                                 <div className="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar min-w-0">
                                                     {postComments.map(c => (
                                                         <div key={c.id} className="text-sm text-slate-300 break-all leading-relaxed">
@@ -412,13 +453,45 @@ export default function TimelinePage({ teamId }) {
                                                     ))}
                                                 </div>
 
-                                                <div className="flex gap-2 items-center min-w-0">
+                                                <div
+                                                    className="relative flex gap-2 items-center min-w-0"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
                                                     <input
+                                                        ref={(el) => (commentRefs.current[moment.id] = el)}
                                                         value={commentInput[moment.id] || ""}
-                                                        onChange={(e) => setCommentInput(prev => ({ ...prev, [moment.id]: e.target.value }))}
+                                                        onChange={(e) =>
+                                                            setCommentInput((prev) => ({
+                                                                ...prev,
+                                                                [moment.id]: e.target.value,
+                                                            }))
+                                                        }
                                                         placeholder="Comentar..."
-                                                        className="flex-1 w-0 min-w-0 bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-primary transition-all"
+                                                        className="flex-1 w-0 min-w-0 bg-slate-800 border border-slate-700 px-3 py-2 pr-12 rounded-lg text-sm focus:outline-none focus:border-primary transition-all"
                                                     />
+
+                                                    <Smile
+                                                        size={18}
+                                                        className={`absolute right-12 top-1/2 -translate-y-1/2 cursor-pointer transition-all ${showEmojiPicker === moment.id ? "text-primary scale-110" : "text-slate-400 hover:text-white"}`}
+                                                        onClick={() =>
+                                                            setShowEmojiPicker(
+                                                                showEmojiPicker === moment.id ? null : moment.id
+                                                            )
+                                                        }
+                                                    />
+
+                                                    {showEmojiPicker === moment.id && (
+                                                        <div
+                                                            className="absolute right-0 bottom-12 z-[999]"
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <EmojiPicker
+                                                                onSelect={(emoji) =>
+                                                                    insertEmojiComment(moment.id, emoji)
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
 
                                                     <button
                                                         onClick={() => handleAddComment(moment.id)}
