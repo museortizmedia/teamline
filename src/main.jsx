@@ -8,13 +8,14 @@ import { NotificationProvider } from './pages/Notification/NotificationContext';
 import { TeamProvider } from './pages/Timeline/TeamContext';
 import MaintenancePage from './pages/MaintenancePage';
 
+const isMaintenance = import.meta.env.VITE_BLOCK === 'true';
+
 createRoot(document.getElementById('root')).render(
   <AuthProvider>
     <TeamProvider>
       <NotificationProvider>
         <StrictMode>
-          {/*<App />*/}
-          <MaintenancePage />
+          {isMaintenance ? <MaintenancePage /> : <App />}
         </StrictMode>
       </NotificationProvider>
     </TeamProvider>
